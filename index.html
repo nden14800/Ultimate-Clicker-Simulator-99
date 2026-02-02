@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Clicker Simulator 99 - Infinite Edition</title>
+    <title>Ultimate Clicker Simulator 99 - v5.0.1 Fix</title>
     
+    <!-- External Library for Infinite Numbers -->
+    <script src="https://cdn.jsdelivr.net/npm/break_infinity.js@2/dist/break_infinity.min.js"></script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +37,9 @@
             --rarity-taco: #f1c40f;
             --rarity-potion: #e84393;
             --rarity-godly: #ff0055;
-            --rarity-zenith: #ffffff; /* New Rarity */
+            --rarity-zenith: #ffffff;
+            --rarity-void: #4b0082;
+            --rarity-omega: #ff4500;
         }
 
         * {
@@ -118,9 +123,9 @@
         }
         .stat-card:hover { transform: translateX(5px); background: rgba(255,255,255,0.12); }
         .stat-icon { font-size: 1.8rem; }
-        .stat-info { display: flex; flex-direction: column; }
+        .stat-info { display: flex; flex-direction: column; overflow: hidden; }
         .stat-label { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 1.3rem; font-weight: 800; }
+        .stat-value { font-size: 1.2rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .rebirth-stat-box {
             background: linear-gradient(135deg, rgba(142, 68, 173, 0.4), rgba(155, 89, 182, 0.2));
@@ -186,6 +191,29 @@
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1) rotate(var(--rot)); opacity: 1; }
             100% { transform: translateY(-150px) scale(1.2) rotate(var(--rot)); opacity: 0; }
+        }
+
+        /* --- Smooth Progress Bar --- */
+        #world-progress-container {
+            width: 300px;
+            height: 12px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            margin-top: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+        }
+        #world-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+            transition: width 0.1s linear; /* Smooth movement */
+        }
+        #world-progress-text {
+            font-size: 0.85rem; margin-top: 5px; color: #ccc; font-weight: bold;
         }
 
         /* --- Right Panel --- */
@@ -358,27 +386,6 @@
         }
         @keyframes popIn { from{transform:scale(0.8); opacity:0;} to{transform:scale(1); opacity:1;} }
 
-        /* Leaderboard */
-        .lb-container {
-            background: #fff; width: 90%; max-width: 600px; height: 80vh; border-radius: 15px;
-            display: flex; flex-direction: column; overflow: hidden; border: 5px solid #333; position:relative;
-        }
-        .lb-header { background: #333; color: white; padding: 15px; font-size: 1.5rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .lb-list { flex: 1; overflow-y: auto; background: #f5f5f5; }
-        .lb-row { display: flex; padding: 12px 15px; border-bottom: 1px solid #ddd; align-items: center; font-size: 1rem; color: #333; }
-        .lb-row.me { background: #ffeaa7; border-left: 6px solid #fdcb6e; font-weight: bold; }
-        .lb-rank { width: 60px; font-weight: bold; color: #555; }
-        .lb-name { flex: 1; }
-        .lb-score { font-family: monospace; font-weight: bold; font-size: 1.1rem; }
-        .lb-diff { font-size: 0.75rem; color: #e74c3c; margin-left: 10px; font-weight: bold; }
-        .lb-footer { padding: 15px; background: #eee; display: flex; justify-content: center; gap: 20px; align-items: center; border-top: 1px solid #ccc; }
-        
-        #lb-sticky-footer {
-            background: #ffeaa7; border-top: 4px solid #fdcb6e; padding: 0;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10;
-        }
-        #lb-sticky-footer .lb-row { border-bottom: none; }
-
         /* Hatch Anim */
         .hatch-grid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; max-width: 800px; padding: 20px; }
         .hatch-card {
@@ -450,9 +457,6 @@
         </div>
 
         <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; width:100%;">
-            <button class="sidebar-btn" onclick="openModal('leaderboard-modal')">
-                <i class="bi bi-trophy-fill" style="color:#f1c40f;"></i> ランキング
-            </button>
             <button class="sidebar-btn" onclick="openModal('settings-modal')">
                 <i class="bi bi-gear-fill" style="color:#bdc3c7;"></i> 設定
             </button>
@@ -470,10 +474,15 @@
                 <i class="bi bi-cursor-fill"></i>
             </button>
         </div>
-        <div style="margin-top:30px; text-align:center; opacity:0.9;">
+        <div style="margin-top:20px; text-align:center; opacity:0.9; display:flex; flex-direction:column; align-items:center;">
             <div id="world-badge" style="font-size:1.3rem; font-weight:800; background:rgba(0,0,0,0.6); padding:10px 25px; border-radius:25px; border:2px solid rgba(255,255,255,0.2);">
                 <i class="bi bi-globe"></i> オーバーワールド
             </div>
+            <!-- New Smooth Progress Bar -->
+            <div id="world-progress-container">
+                <div id="world-progress-bar"></div>
+            </div>
+            <div id="world-progress-text">次のワールドまで: 0%</div>
         </div>
     </div>
 
@@ -658,83 +667,47 @@
                     <h4>セーブデータについて</h4>
                     <p>データはブラウザの<b>localStorage</b>に自動保存されます。ブラウザのキャッシュを削除すると消える可能性があります。</p>
                     <p><b>ダウンロード</b>ボタンでバックアップを作成し、<b>ロード</b>でいつでも復元できます。</p>
-                    <hr>
-                    <h4>ランキングについて</h4>
-                    <p>このランキングはシミュレーション（架空のデータ）です。あなたの進行速度に合わせて周囲のプレイヤーの強さが自動調整され、リアルな競争を演出しています。</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="leaderboard-modal" class="modal-overlay">
-        <div class="lb-container">
-            <div class="lb-header">
-                <span>グローバルランキング (Top 10,000)</span>
-                <i class="bi bi-x-lg" style="cursor:pointer;" onclick="closeModal('leaderboard-modal')"></i>
-            </div>
-            <div class="lb-list" id="lb-content"></div>
-            <!-- Sticky User Rank -->
-            <div id="lb-sticky-footer"></div>
-            
-            <div class="lb-footer">
-                <button class="buy-btn" onclick="changeLbPage(-1)">前へ</button>
-                <span id="lb-page-disp" style="font-weight:bold; color:#333;">1 / 100</span>
-                <button class="buy-btn" onclick="changeLbPage(1)">次へ</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        /* ================= CONFIGURATION ================= */
-        const GAME_VERSION = 3.0; 
-        const SUFFIXES = ["K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qg", "Uqg", "Dqg", "Tqg", "Qaqg", "Qiqg", "Sxqg", "Spqg", "Ocqg", "Noqg", "Qqg", "Uqqg", "Dqqg", "Tqqg", "Qaqqg", "Qiqqg", "Sxqqg", "Spqqg", "Ocqqg", "Noqqg", "Sg", "Usg", "Dsg", "Tsg", "Qasg", "Qisg", "Sxsg", "Spsg", "Ocsg", "Nosg", "Spg", "Uspg", "Dspg", "Tspg", "Qaspg", "Qispg", "Sxspg", "Spspg", "Ocspg", "Nospg", "Og", "Uog", "Dog", "Tog", "Qaog", "Qiog", "Sxog", "Spog", "Ocog", "Noog", "Ng", "Ung", "Dng", "Tng", "Qang", "Qing", "Sxng", "Spng", "Ocng", "Nong", "Ce", "Uce"];
-        
+        /* ================= CONFIGURATION & CONSTANTS ================= */
+        const GAME_VERSION = 5.01; 
+        const ALPHABETS = "abcdefghijklmnopqrstuvwxyz";
+
         const RARITY_COLORS = {
-            "Basic": "#b2bec3",
-            "Rare": "#55efc4",
-            "Epic": "#0984e3",
-            "Legendary": "#fdcb6e",
-            "Mythical": "#d63031",
-            "Divine": "#e056fd",
-            "Exclusive": "#6c5ce7",
-            "Secret": "#000000",
-            "Taco": "#f1c40f",
-            "Potion": "#e84393",
-            "Godly": "#ff0055",
-            "Zenith": "#ffffff"
+            "Basic": "#b2bec3", "Rare": "#55efc4", "Epic": "#0984e3", "Legendary": "#fdcb6e",
+            "Mythical": "#d63031", "Divine": "#e056fd", "Exclusive": "#6c5ce7", "Secret": "#000000",
+            "Taco": "#f1c40f", "Potion": "#e84393", "Godly": "#ff0055", "Zenith": "#ffffff",
+            "Void": "#4b0082", "Omega": "#ff4500"
         };
 
+        // NEW INFINITE FORMATTER
         function formatNumber(num) {
-            if (num < 1000) return Math.floor(num).toString();
-            // INFINITE HANDLER: Custom Suffix Generation
-            if (!isFinite(num)) return "MAX CAP";
-            
-            let exponent = Math.floor(Math.log10(num));
-            let tier = Math.floor(exponent / 3);
-            if (tier === 0) return Math.floor(num).toString();
-            
-            let suffix = "";
-            let suffixIndex = tier - 1;
-            
-            if (suffixIndex < SUFFIXES.length) {
-                suffix = SUFFIXES[suffixIndex];
-            } else {
-                // Generate aa, ab, ac... logic
-                let remaining = suffixIndex - SUFFIXES.length;
-                let alphabets = "abcdefghijklmnopqrstuvwxyz";
-                let count = Math.floor(remaining / 26);
-                let remainder = remaining % 26;
-                
-                if (count < 26) {
-                    suffix = alphabets[count] + alphabets[remainder];
-                } else {
-                    // Falls back to generic if even that is exceeded (unlikely in normal play)
-                    suffix = "e" + exponent;
+            let d = new Decimal(num);
+            if(d.lt(1000)) return d.floor().toString();
+            let exponent = d.e; 
+            if (exponent < 36) { 
+                let tier = Math.floor(exponent / 3);
+                let suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
+                if (tier < suffixes.length) {
+                    return d.div(Decimal.pow(10, tier * 3)).toFixed(2) + suffixes[tier];
                 }
             }
-            
-            let scale = Math.pow(10, tier * 3);
-            return (num / scale).toFixed(2) + suffix;
+            let tier = Math.floor(exponent / 3);
+            let alphaIndex = tier - 12; 
+            if (alphaIndex < 0) return d.toExponential(2); 
+            let s = "";
+            let r = alphaIndex;
+            do {
+                let rem = r % 26;
+                s = ALPHABETS[rem] + s;
+                r = Math.floor(r / 26);
+            } while (r > 0);
+            if (s.length < 2) s = "a" + s; 
+            return d.div(Decimal.pow(10, tier * 3)).toFixed(2) + s;
         }
 
         function showNotification(msg, type) {
@@ -749,76 +722,92 @@
             setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 3500);
         }
 
-        /* ================= GAME DATA DEF ================= */
-        // Rebalanced World Multipliers (Smoother Curve)
+        /* ================= GAME DATA DEFINITIONS (DEFINED FIRST) ================= */
+        // Costs are now strings to be converted to Decimal
         const WORLDS = [
-            { id: 0, name: "オーバーワールド", multi: 1, cost: 0, bg: "linear-gradient(135deg, #00c6ff, #0072ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
-            { id: 1, name: "キャンディランド", multi: 5, cost: 500000, bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
-            { id: 2, name: "溶岩の領域", multi: 25, cost: 100000000, bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 3, name: "宇宙空間", multi: 150, cost: 50000000000, bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
-            { id: 4, name: "タコスゾーン", multi: 500, cost: 1e14, bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
-            { id: 5, name: "サイバーシティ", multi: 2500, cost: 1e16, bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
-            { id: 6, name: "アトランティス", multi: 10000, cost: 1e19, bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
-            { id: 7, name: "天国の門", multi: 50000, cost: 1e22, bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
-            { id: 8, name: "暗黒のダンジョン", multi: 2e5, cost: 1e26, bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
-            { id: 9, name: "銀河の核", multi: 1e6, cost: 1e32, bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
-            { id: 10, name: "虚無の次元", multi: 5e6, cost: 1e38, bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
-            { id: 11, name: "ネオン東京", multi: 2e7, cost: 1e45, bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
-            { id: 12, name: "スチームパンク", multi: 1e8, cost: 1e53, bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
-            { id: 13, name: "8ビット王国", multi: 5e8, cost: 1e62, bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 14, name: "ドラゴンの巣", multi: 2e9, cost: 1e72, bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
-            { id: 15, name: "忍の里", multi: 1e10, cost: 1e83, bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
-            { id: 16, name: "ゴールドラッシュ", multi: 5e10, cost: 1e95, bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
-            { id: 17, name: "お化け屋敷", multi: 2e11, cost: 1e108, bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
-            { id: 18, name: "氷結ツンドラ", multi: 1e12, cost: 1e122, bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
-            { id: 19, name: "砂漠の遺跡", multi: 5e12, cost: 1e137, bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
-            { id: 20, name: "アマゾンジャングル", multi: 2e13, cost: 1e153, bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
-            { id: 21, name: "ユートピア3000", multi: 1e14, cost: 1e170, bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 22, name: "ノワールシティ", multi: 5e14, cost: 1e188, bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
-            { id: 23, name: "グリッチマトリックス", multi: 2e15, cost: 1e207, bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
-            // NEW WORLDS (Doubled Content)
-            { id: 24, name: "サイバースラム", multi: 1e16, cost: 1e227, bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
-            { id: 25, name: "天空の城ラピス", multi: 5e16, cost: 1e248, bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
-            { id: 26, name: "深海トレンチ", multi: 2e17, cost: 1e270, bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
-            { id: 27, name: "マグマコア", multi: 1e18, cost: 1e293, bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 28, name: "古代ローマ", multi: 5e18, cost: 1e300, bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
-            // Beyond 1e308 (Javascript limit) handled by scaling down costs in calculation or relying on our suffix system
-            { id: 29, name: "ワイルドウェスト", multi: 2e19, cost: 1e305, bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
-            { id: 30, name: "ジュラシックパーク", multi: 1e20, cost: 1e308, bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
-            { id: 31, name: "ホラーマンション", multi: 5e20, cost: 1.7e308, bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
-            { id: 32, name: "月面基地", multi: 2e21, cost: 1e308, bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
-            { id: 33, name: "火星コロニー", multi: 1e22, cost: 1e308, bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
-            { id: 34, name: "太陽の表面", multi: 5e22, cost: 1e308, bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
-            { id: 35, name: "ブラックホール事象", multi: 2e23, cost: 1e308, bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
-            { id: 36, name: "マルチバース", multi: 1e24, cost: 1e308, bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 37, name: "ピクセル次元", multi: 5e24, cost: 1e308, bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 38, name: "抽象芸術の世界", multi: 2e25, cost: 1e308, bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
-            { id: 39, name: "ホワイトスペース", multi: 1e26, cost: 1e308, bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
-            { id: 40, name: "シンギュラリティ", multi: 1e30, cost: 1e308, bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
+            { id: 0, name: "オーバーワールド", multi: "1", cost: "0", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
+            { id: 1, name: "キャンディランド", multi: "5", cost: "500000", bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
+            { id: 2, name: "溶岩の領域", multi: "25", cost: "1e8", bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 3, name: "宇宙空間", multi: "150", cost: "5e10", bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
+            { id: 4, name: "タコスゾーン", multi: "500", cost: "1e14", bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
+            { id: 5, name: "サイバーシティ", multi: "2500", cost: "1e17", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
+            { id: 6, name: "アトランティス", multi: "10000", cost: "1e20", bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
+            { id: 7, name: "天国の門", multi: "50000", cost: "1e23", bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
+            { id: 8, name: "暗黒のダンジョン", multi: "2e5", cost: "1e27", bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
+            { id: 9, name: "銀河の核", multi: "1e6", cost: "1e33", bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
+            { id: 10, name: "虚無の次元", multi: "5e6", cost: "1e39", bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
+            { id: 11, name: "ネオン東京", multi: "2e7", cost: "1e46", bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
+            { id: 12, name: "スチームパンク", multi: "1e8", cost: "1e54", bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
+            { id: 13, name: "8ビット王国", multi: "5e8", cost: "1e63", bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 14, name: "ドラゴンの巣", multi: "2e9", cost: "1e73", bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
+            { id: 15, name: "忍の里", multi: "1e10", cost: "1e84", bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
+            { id: 16, name: "ゴールドラッシュ", multi: "5e10", cost: "1e96", bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
+            { id: 17, name: "お化け屋敷", multi: "2e11", cost: "1e109", bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
+            { id: 18, name: "氷結ツンドラ", multi: "1e12", cost: "1e123", bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
+            { id: 19, name: "砂漠の遺跡", multi: "5e12", cost: "1e138", bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
+            { id: 20, name: "アマゾンジャングル", multi: "2e13", cost: "1e154", bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
+            { id: 21, name: "ユートピア3000", multi: "1e14", cost: "1e171", bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 22, name: "ノワールシティ", multi: "5e14", cost: "1e189", bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
+            { id: 23, name: "グリッチマトリックス", multi: "2e15", cost: "1e208", bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
+            // NEW WORLDS (Balanced High Cost)
+            { id: 24, name: "サイバースラム", multi: "1e16", cost: "1e228", bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
+            { id: 25, name: "天空の城ラピス", multi: "5e16", cost: "1e249", bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
+            { id: 26, name: "深海トレンチ", multi: "2e17", cost: "1e271", bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
+            { id: 27, name: "マグマコア", multi: "1e18", cost: "1e294", bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 28, name: "古代ローマ", multi: "5e18", cost: "1e305", bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
+            // BREAKING JS LIMIT HERE
+            { id: 29, name: "ワイルドウェスト", multi: "2e19", cost: "1e330", bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
+            { id: 30, name: "ジュラシックパーク", multi: "1e20", cost: "1e360", bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
+            { id: 31, name: "ホラーマンション", multi: "5e20", cost: "1e400", bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
+            { id: 32, name: "月面基地", multi: "2e21", cost: "1e450", bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
+            { id: 33, name: "火星コロニー", multi: "1e22", cost: "1e500", bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
+            { id: 34, name: "太陽の表面", multi: "5e22", cost: "1e600", bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
+            { id: 35, name: "ブラックホール事象", multi: "2e23", cost: "1e750", bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
+            { id: 36, name: "マルチバース", multi: "1e24", cost: "1e900", bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 37, name: "ピクセル次元", multi: "5e24", cost: "1e1100", bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 38, name: "抽象芸術の世界", multi: "2e25", cost: "1e1500", bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
+            { id: 39, name: "ホワイトスペース", multi: "1e26", cost: "1e2000", bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
+            { id: 40, name: "シンギュラリティ", multi: "1e30", cost: "1e3000", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
         ];
 
         const EGGS = [
-            { id: 0, name: "スターター卵", cost: 250, pets: [{ name: "イヌ", rarity: "Basic", chance: 0.6, power: 1.5 }, { name: "ネコ", rarity: "Basic", chance: 0.35, power: 2 }, { name: "ウサギ", rarity: "Rare", chance: 0.05, power: 5 }] },
-            { id: 1, name: "森の卵", cost: 15000, pets: [{ name: "クマ", rarity: "Rare", chance: 0.7, power: 15 }, { name: "キツネ", rarity: "Epic", chance: 0.25, power: 40 }, { name: "ドラゴン", rarity: "Legendary", chance: 0.05, power: 150 }] },
-            { id: 2, name: "マグマの卵", cost: 5000000, pets: [{ name: "インプ", rarity: "Epic", chance: 0.6, power: 300 }, { name: "ゴーレム", rarity: "Mythical", chance: 0.35, power: 800 }, { name: "フェニックス", rarity: "Divine", chance: 0.05, power: 5000 }] },
-            { id: 3, name: "虚無の卵", cost: 2e9, pets: [{ name: "エイリアン", rarity: "Mythical", chance: 0.7, power: 10000 }, { name: "UFO", rarity: "Divine", chance: 0.29, power: 30000 }, { name: "ブラックホール", rarity: "Exclusive", chance: 0.01, power: 200000 }] },
-            { id: 4, name: "タコスの卵", cost: 5e14, pets: [{ name: "タコス", rarity: "Legendary", chance: 0.8, power: 1e5 }, { name: "ブリトー", rarity: "Mythical", chance: 0.19, power: 5e5 }, { name: "ゴールデンタコス", rarity: "Exclusive", chance: 0.01, power: 2e6 }] },
-            { id: 5, name: "サイバー卵", cost: 1e16, pets: [{ name: "ロボット", rarity: "Legendary", chance: 0.8, power: 5e6 }, { name: "サイボーグ", rarity: "Mythical", chance: 0.19, power: 2e7 }, { name: "AIの神", rarity: "Exclusive", chance: 0.01, power: 1e8 }] },
-            { id: 6, name: "海の卵", cost: 1e20, pets: [{ name: "サメ", rarity: "Mythical", chance: 0.8, power: 1e9 }, { name: "クラーケン", rarity: "Divine", chance: 0.19, power: 5e9 }, { name: "リヴァイアサン", rarity: "Exclusive", chance: 0.01, power: 5e10 }] },
-            { id: 7, name: "天界の卵", cost: 1e25, pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 1e12 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 1e13 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 1e15 }] },
-            { id: 8, name: "悪魔の卵", cost: 1e30, pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e16 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 1e18 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e20 }] },
-            { id: 9, name: "銀河の卵", cost: 1e38, pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 1e24 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1e26 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 1e28 }] },
-            { id: 10, name: "次元の卵", cost: 1e45, pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 1e32 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 1e35 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 1e40 }] },
-            { id: 11, name: "ネオン卵", cost: 1e52, pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e45 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 1e50 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e55 }] },
-            { id: 12, name: "歯車の卵", cost: 1e60, pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 1e60 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1e65 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 1e70 }] },
-            { id: 13, name: "ドットの卵", cost: 1e70, pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 1e80 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 1e85 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 1e90 }] },
-            { id: 14, name: "竜の卵", cost: 1e80, pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e100 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 1e110 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e120 }] },
-            { id: 15, name: "黄金の卵", cost: 1e90, pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 1e140 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1e150 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 1e160 }] },
-            { id: 16, name: "氷の卵", cost: 1e100, pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 1e180 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 1e200 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 1e220 }] },
-            { id: 17, name: "未来の卵", cost: 1e115, pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e250 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 1e270 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e300 }] },
-            // NEW EGGS
-            { id: 18, name: "オメガ卵", cost: 1e150, pets: [{ name: "オメガ", rarity: "Divine", chance: 0.8, power: 1e320 }, { name: "アルファ", rarity: "Exclusive", chance: 0.19, power: 1e330 }, { name: "無限", rarity: "Zenith", chance: 0.01, power: 1e350 }] },
-            { id: 19, name: "深淵の卵", cost: 1e200, pets: [{ name: "深淵", rarity: "Exclusive", chance: 0.8, power: 1e400 }, { name: "奈落", rarity: "Secret", chance: 0.19, power: 1e420 }, { name: "虚無の王", rarity: "Godly", chance: 0.01, power: 1e450 }] }
+            { id: 0, name: "スターター卵", cost: "250", pets: [{ name: "イヌ", rarity: "Basic", chance: 0.6, power: 1.5 }, { name: "ネコ", rarity: "Basic", chance: 0.35, power: 2 }, { name: "ウサギ", rarity: "Rare", chance: 0.05, power: 5 }] },
+            { id: 1, name: "森の卵", cost: "15000", pets: [{ name: "クマ", rarity: "Rare", chance: 0.7, power: 15 }, { name: "キツネ", rarity: "Epic", chance: 0.25, power: 40 }, { name: "ドラゴン", rarity: "Legendary", chance: 0.05, power: 150 }] },
+            { id: 2, name: "マグマの卵", cost: "5e6", pets: [{ name: "インプ", rarity: "Epic", chance: 0.6, power: 300 }, { name: "ゴーレム", rarity: "Mythical", chance: 0.35, power: 800 }, { name: "フェニックス", rarity: "Divine", chance: 0.05, power: 5000 }] },
+            { id: 3, name: "虚無の卵", cost: "2e9", pets: [{ name: "エイリアン", rarity: "Mythical", chance: 0.7, power: 10000 }, { name: "UFO", rarity: "Divine", chance: 0.29, power: 30000 }, { name: "ブラックホール", rarity: "Exclusive", chance: 0.01, power: 200000 }] },
+            { id: 4, name: "タコスの卵", cost: "5e14", pets: [{ name: "タコス", rarity: "Legendary", chance: 0.8, power: 1e5 }, { name: "ブリトー", rarity: "Mythical", chance: 0.19, power: 5e5 }, { name: "ゴールデンタコス", rarity: "Exclusive", chance: 0.01, power: 2e6 }] },
+            { id: 5, name: "サイバー卵", cost: "1e16", pets: [{ name: "ロボット", rarity: "Legendary", chance: 0.8, power: 5e6 }, { name: "サイボーグ", rarity: "Mythical", chance: 0.19, power: 2e7 }, { name: "AIの神", rarity: "Exclusive", chance: 0.01, power: 1e8 }] },
+            { id: 6, name: "海の卵", cost: "1e20", pets: [{ name: "サメ", rarity: "Mythical", chance: 0.8, power: 1e9 }, { name: "クラーケン", rarity: "Divine", chance: 0.19, power: 5e9 }, { name: "リヴァイアサン", rarity: "Exclusive", chance: 0.01, power: 5e10 }] },
+            { id: 7, name: "天界の卵", cost: "1e25", pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 1e12 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 1e13 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 1e15 }] },
+            { id: 8, name: "悪魔の卵", cost: "1e30", pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e16 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 1e18 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e20 }] },
+            { id: 9, name: "銀河の卵", cost: "1e38", pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 1e24 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1e26 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 1e28 }] },
+            { id: 10, name: "次元の卵", cost: "1e45", pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 1e32 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 1e35 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 1e40 }] },
+            { id: 11, name: "ネオン卵", cost: "1e52", pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e45 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 1e50 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e55 }] },
+            { id: 12, name: "歯車の卵", cost: "1e60", pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 1e60 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1e65 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 1e70 }] },
+            { id: 13, name: "ドットの卵", cost: "1e70", pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 1e80 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 1e85 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 1e90 }] },
+            { id: 14, name: "竜の卵", cost: "1e80", pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e100 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 1e110 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e120 }] },
+            { id: 15, name: "黄金の卵", cost: "1e90", pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 1e140 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1e150 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 1e160 }] },
+            { id: 16, name: "氷の卵", cost: "1e100", pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 1e180 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 1e200 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 1e220 }] },
+            { id: 17, name: "未来の卵", cost: "1e115", pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e250 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 1e270 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e300 }] },
+            { id: 18, name: "古代の卵", cost: "1e150", pets: [{ name: "化石", rarity: "Divine", chance: 0.8, power: 1e350 }, { name: "アンモナイト", rarity: "Exclusive", chance: 0.19, power: 1e380 }, { name: "シーラカンス", rarity: "Secret", chance: 0.01, power: 1e400 }] },
+            { id: 19, name: "密林の卵", cost: "1e200", pets: [{ name: "ジャガー", rarity: "Exclusive", chance: 0.8, power: 1e450 }, { name: "大蛇", rarity: "Secret", chance: 0.19, power: 1e480 }, { name: "森の精霊", rarity: "Godly", chance: 0.01, power: 1e500 }] },
+            { id: 20, name: "スラムの卵", cost: "1e230", pets: [{ name: "ラット", rarity: "Exclusive", chance: 0.8, power: 1e550 }, { name: "ハッカー", rarity: "Secret", chance: 0.19, power: 1e600 }, { name: "ジャンク神", rarity: "Zenith", chance: 0.01, power: 1e650 }] },
+            { id: 21, name: "天空の卵", cost: "1e250", pets: [{ name: "ハーピー", rarity: "Secret", chance: 0.8, power: 1e700 }, { name: "グリフォン", rarity: "Godly", chance: 0.19, power: 1e750 }, { name: "天空竜", rarity: "Zenith", chance: 0.01, power: 1e800 }] },
+            { id: 22, name: "深海の卵", cost: "1e275", pets: [{ name: "アンコウ", rarity: "Secret", chance: 0.8, power: 1e850 }, { name: "海獣", rarity: "Godly", chance: 0.19, power: 1e900 }, { name: "ポセイドン", rarity: "Zenith", chance: 0.01, power: 1e1000 }] },
+            { id: 23, name: "溶岩核の卵", cost: "1e300", pets: [{ name: "溶岩スライム", rarity: "Godly", chance: 0.8, power: 1e1100 }, { name: "イフリート", rarity: "Zenith", chance: 0.19, power: 1e1200 }, { name: "スルト", rarity: "Void", chance: 0.01, power: 1e1300 }] },
+            { id: 24, name: "ローマの卵", cost: "1e310", pets: [{ name: "戦士", rarity: "Godly", chance: 0.8, power: 1e1400 }, { name: "将軍", rarity: "Zenith", chance: 0.19, power: 1e1500 }, { name: "カエサル", rarity: "Void", chance: 0.01, power: 1e1600 }] },
+            { id: 25, name: "西部の卵", cost: "1e340", pets: [{ name: "保安官", rarity: "Zenith", chance: 0.8, power: 1e1700 }, { name: "無法者", rarity: "Void", chance: 0.19, power: 1e1800 }, { name: "早撃ち", rarity: "Omega", chance: 0.01, power: 1e2000 }] },
+            { id: 26, name: "恐竜の卵", cost: "1e370", pets: [{ name: "トリケラ", rarity: "Zenith", chance: 0.8, power: 1e2200 }, { name: "T-Rex", rarity: "Void", chance: 0.19, power: 1e2400 }, { name: "メテオ", rarity: "Omega", chance: 0.01, power: 1e2600 }] },
+            { id: 27, name: "恐怖の卵", cost: "1e410", pets: [{ name: "ゴースト", rarity: "Void", chance: 0.8, power: 1e2800 }, { name: "死神", rarity: "Omega", chance: 0.19, power: 1e3000 }, { name: "クトゥルフ", rarity: "Omega", chance: 0.01, power: 1e3200 }] },
+            { id: 28, name: "月の卵", cost: "1e460", pets: [{ name: "ムーンラビット", rarity: "Void", chance: 0.8, power: 1e3500 }, { name: "かぐや", rarity: "Omega", chance: 0.19, power: 1e3800 }, { name: "月読命", rarity: "Omega", chance: 0.01, power: 1e4000 }] },
+            { id: 29, name: "火星の卵", cost: "1e510", pets: [{ name: "マーズ", rarity: "Void", chance: 0.8, power: 1e4500 }, { name: "火星人", rarity: "Omega", chance: 0.19, power: 1e5000 }, { name: "オリンポス", rarity: "Omega", chance: 0.01, power: 1e5500 }] },
+            { id: 30, name: "太陽の卵", cost: "1e610", pets: [{ name: "フレア", rarity: "Omega", chance: 0.8, power: 1e6000 }, { name: "ヘリオス", rarity: "Omega", chance: 0.19, power: 1e6500 }, { name: "アマテラス", rarity: "Omega", chance: 0.01, power: 1e7000 }] },
+            { id: 31, name: "ブラックホール卵", cost: "1e760", pets: [{ name: "重力子", rarity: "Omega", chance: 0.8, power: 1e8000 }, { name: "事象の地平線", rarity: "Omega", chance: 0.19, power: 1e9000 }, { name: "特異点", rarity: "Omega", chance: 0.01, power: 1e10000 }] },
+            { id: 32, name: "マルチバース卵", cost: "1e920", pets: [{ name: "別次元の君", rarity: "Omega", chance: 0.8, power: 1e12000 }, { name: "タイムパトロール", rarity: "Omega", chance: 0.19, power: 1e14000 }, { name: "全知全能", rarity: "Omega", chance: 0.01, power: 1e16000 }] },
+            { id: 33, name: "ピクセル卵", cost: "1e1150", pets: [{ name: "バグ", rarity: "Omega", chance: 0.8, power: 1e18000 }, { name: "グリッチ", rarity: "Omega", chance: 0.19, power: 1e20000 }, { name: "開発者", rarity: "Omega", chance: 0.01, power: 1e25000 }] },
+            { id: 34, name: "抽象の卵", cost: "1e1550", pets: [{ name: "形", rarity: "Omega", chance: 0.8, power: 1e30000 }, { name: "色", rarity: "Omega", chance: 0.19, power: 1e35000 }, { name: "概念", rarity: "Omega", chance: 0.01, power: 1e40000 }] },
+            { id: 35, name: "無の卵", cost: "1e2100", pets: [{ name: "空白", rarity: "Omega", chance: 0.8, power: 1e50000 }, { name: "虚構", rarity: "Omega", chance: 0.19, power: 1e60000 }, { name: "存在しないもの", rarity: "Omega", chance: 0.01, power: 1e80000 }] },
+            { id: 36, name: "シンギュラリティ卵", cost: "1e3100", pets: [{ name: "AI", rarity: "Omega", chance: 0.8, power: 1e100000 }, { name: "超知能", rarity: "Omega", chance: 0.19, power: 1e200000 }, { name: "THE END", rarity: "Zenith", chance: 0.01, power: 1e500000 }] }
         ];
 
         const DIAMOND_SHOP = [
@@ -831,7 +820,6 @@
             { id: 'mega_potion', name: 'メガポーション', desc:'2分間 全ステータス3倍', cost: 1500, type: 'buff', duration: 120, icon:'bi-fire', rarity:'Godly' },
             { id: 'god_potion', name: '神のポーション', desc:'1分間 全ステータス10倍', cost: 10000, type: 'buff', duration: 60, icon:'bi-sun-fill', rarity:'Zenith' },
             
-            // EXPENSIVE SINKS
             { id: 'perm_click', name: '永続クリック強化', desc:'クリック力永久+100%', cost: 1000000, type: 'perm', power: 2, icon:'bi-mouse', rarity:'Exclusive' },
             { id: 'perm_auto', name: '永続自動強化', desc:'自動クリック永久+100%', cost: 5000000, type: 'perm', power: 2, icon:'bi-robot', rarity:'Secret' },
             { id: 'perm_luck', name: '永続ラック強化', desc:'ダイヤ出現率永久+100%', cost: 100000000, type: 'perm', power: 2, icon:'bi-stars', rarity:'Godly' },
@@ -841,8 +829,6 @@
             { id: 'zenith_egg', name: 'Zenith Egg', desc:'究極ペット (1e50倍)', cost: 1000000000, type: 'pet', power: 1e50, rarity:'Zenith', icon:'bi-trophy-fill' }
         ];
 
-        /* ================= 160 UNIQUE UPGRADES (GENERATED) ================= */
-        const BUILDING_TYPES = [];
         const UPGRADE_NAMES = [
             ["木のカーソル", "グランマ", "農場", "宝石磨き"], // World 0
             ["工場", "砂糖のマウス", "銀のコイン", "お菓子オーブン"], // World 1
@@ -888,33 +874,30 @@
             ["AIの反乱", "意識のアップロード", "永遠の命", "オメガポイント"] // 40 Singularity
         ];
 
-        // Generate Upgrades
+        /* ================= GAME LOGIC START ================= */
+        const BUILDING_TYPES = [];
         let upgradeIdCounter = 1;
         WORLDS.forEach((w, idx) => {
             if(idx < UPGRADE_NAMES.length) {
                 let names = UPGRADE_NAMES[idx];
-                let baseCost = w.cost === 0 ? 15 : w.cost * 1.5;
-                let baseProd = w.multi * 10;
+                let baseCost = new Decimal(w.cost).eq(0) ? new Decimal(15) : new Decimal(w.cost).times(1.5);
+                let baseProd = new Decimal(w.multi).times(10);
                 
-                // 1. Click
                 BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[0], type: 'click', baseP: baseProd, baseC: baseCost, icon: 'bi-cursor', desc: `クリックパワー +${formatNumber(baseProd)}`, worldReq: idx });
-                // 2. Auto
-                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[1], type: 'auto', baseP: baseProd * 5, baseC: baseCost * 10, icon: 'bi-gear', desc: `自動クリック +${formatNumber(baseProd*5)}`, worldReq: idx });
-                // 3. Auto Strong
-                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[2], type: 'auto', baseP: baseProd * 20, baseC: baseCost * 100, icon: 'bi-buildings', desc: `自動クリック +${formatNumber(baseProd*20)}`, worldReq: idx });
-                // 4. Special (Gold/Diamond)
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[1], type: 'auto', baseP: baseProd.times(5), baseC: baseCost.times(10), icon: 'bi-gear', desc: `自動クリック +${formatNumber(baseProd.times(5))}`, worldReq: idx });
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[2], type: 'auto', baseP: baseProd.times(20), baseC: baseCost.times(100), icon: 'bi-buildings', desc: `自動クリック +${formatNumber(baseProd.times(20))}`, worldReq: idx });
+                
                 let type = idx % 2 === 0 ? 'diamond' : 'gold';
                 let desc = type === 'diamond' ? 'ダイヤ獲得量UP' : 'ゴールド倍率UP';
-                let val = idx + 1;
-                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[3], type: type, baseP: val, baseC: baseCost * 500, icon: 'bi-stars', desc: desc, worldReq: idx });
+                let val = new Decimal(idx + 1);
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[3], type: type, baseP: val, baseC: baseCost.times(500), icon: 'bi-stars', desc: desc, worldReq: idx });
             }
         });
 
-        /* ================= GAME STATE & LOGIC ================= */
         let game = {
             version: GAME_VERSION,
-            clicks: 0, 
-            gems: 0,
+            clicks: new Decimal(0), 
+            gems: new Decimal(0),
             rebirths: 0,
             world: 0,
             buildings: {}, 
@@ -929,14 +912,12 @@
         let autoHatchEnabled = false;
         let autoHatchTimer = null;
         let audioPlayer = document.getElementById('bgm-player');
-        let leaderboardData = []; 
-        let lbPage = 1;
         let currentEgg = null;
         
-        let cachedAutoCPS = 0;
-        let cachedClickPower = 1;
-        let cachedGoldMulti = 1;
-        let cachedDiamondMulti = 1;
+        let cachedAutoCPS = new Decimal(0);
+        let cachedClickPower = new Decimal(1);
+        let cachedGoldMulti = new Decimal(1);
+        let cachedDiamondMulti = new Decimal(1);
         let cachedDiamondChance = 0.001;
         let cachedCritChance = 0.01;
         let manualClickHistory = [];
@@ -946,85 +927,91 @@
         function initGame() {
             loadGame(); 
             recalcStats();
-            initLeaderboard(); 
             renderUpgrades(); renderEggs(); renderShop(); renderWorlds(); renderInventory();
             
-            setInterval(gameLoop, 100); 
+            // Loop runs every 1ms for Hyper Realtime
+            setInterval(gameLoop, 1); 
             setInterval(saveGame, 15000); 
-            setInterval(updateLeaderboard, 1000); 
+            setInterval(recalcStats, 500); // Recalc periodically for auto-adjustments
             
             document.body.addEventListener('click', () => { if(audioPlayer.paused && audioPlayer.src) audioPlayer.play().catch(()=>{}); }, {once:true});
             changeWorld(game.world, true);
         }
 
         function gameLoop() {
-            if(cachedAutoCPS > 0) {
-                let add = cachedAutoCPS / 10;
-                if (game.clicks + add < 1.7e308) game.clicks += add;
+            let now = Date.now();
+            
+            // Add Auto Clicks (1ms worth)
+            if(cachedAutoCPS.gt(0)) {
+                let add = cachedAutoCPS.div(1000); 
+                game.clicks = game.clicks.add(add);
             }
             
-            let buffChanged = false;
+            // Buffs decay (simple check)
             for(let key in game.buffs) {
                 if(game.buffs[key] > 0) {
-                    game.buffs[key] -= 0.1;
-                } else {
-                    delete game.buffs[key];
-                    buffChanged = true;
+                    game.buffs[key] -= 0.001; // 1ms decay
+                    if(game.buffs[key] <= 0) {
+                         delete game.buffs[key];
+                         recalcStats();
+                    }
                 }
             }
-            if(buffChanged) recalcStats();
-            let now = Date.now();
+
+            // Progress Bar Logic
+            updateProgressBar();
+
             manualClickHistory = manualClickHistory.filter(t => now - t < 1000);
             updateUI(cachedAutoCPS, manualClickHistory.length);
         }
 
-        /* --- CALCULATIONS --- */
+        /* --- CALCULATIONS (DECIMAL) --- */
         function recalcStats() {
-            let totalAuto = 0;
-            let totalClick = 1;
-            let goldMulti = 1;
-            let diamondMulti = 1;
+            let totalAuto = new Decimal(0);
+            let totalClick = new Decimal(1);
+            let goldMulti = new Decimal(1);
+            let diamondMulti = new Decimal(1);
             let diamondChance = 0.001; 
             let critChance = 0.01;
-            let m = getTotalMulti();
+            let m = getTotalMulti(); // Decimal
 
             BUILDING_TYPES.forEach(b => {
                 let lvl = game.buildings[b.id] || 0;
                 if(lvl > 0) {
-                    if(b.type === 'click') { totalClick += (b.baseP * lvl); } 
-                    else if (b.type === 'auto') { totalAuto += (b.baseP * lvl); } 
-                    else if (b.type === 'gold') { goldMulti += (b.baseP * lvl); } 
+                    if(b.type === 'click') { totalClick = totalClick.add(b.baseP.times(lvl)); } 
+                    else if (b.type === 'auto') { totalAuto = totalAuto.add(b.baseP.times(lvl)); } 
+                    else if (b.type === 'gold') { goldMulti = goldMulti.add(b.baseP.times(lvl)); } 
                     else if (b.type === 'diamond') {
-                        if(b.desc.includes('率')) diamondChance *= (1 + (b.baseP * lvl));
-                        else diamondMulti += (b.baseP * lvl);
+                        if(b.desc.includes('率')) diamondChance *= (1 + (parseFloat(b.baseP) * lvl));
+                        else diamondMulti = diamondMulti.add(b.baseP.times(lvl));
                     }
                 }
             });
             
             // Perm Buffs
             if(game.permBuffs) {
-                totalClick *= (1 + game.permBuffs.click);
-                totalAuto *= (1 + game.permBuffs.auto);
+                totalClick = totalClick.times(1 + game.permBuffs.click);
+                totalAuto = totalAuto.times(1 + game.permBuffs.auto);
                 diamondChance *= (1 + game.permBuffs.luck);
             }
 
             // Buffs
-            if(game.buffs['speed_potion']) totalClick *= 2;
+            if(game.buffs['speed_potion']) totalClick = totalClick.times(2);
             if(game.buffs['luck_potion']) diamondChance *= 2;
             if(game.buffs['crit_potion']) critChance *= 2;
-            if(game.buffs['gold_potion']) goldMulti *= 2;
+            if(game.buffs['gold_potion']) goldMulti = goldMulti.times(2);
             
-            if(game.buffs['click_frenzy']) totalClick *= 5;
+            if(game.buffs['click_frenzy']) totalClick = totalClick.times(5);
             if(game.buffs['ultra_luck']) diamondChance *= 5;
             if(game.buffs['mega_potion']) {
-                totalClick *= 3; totalAuto *= 3; goldMulti *= 3; diamondMulti *= 3; diamondChance *= 3;
+                totalClick = totalClick.times(3); totalAuto = totalAuto.times(3); goldMulti = goldMulti.times(3); diamondMulti = diamondMulti.times(3); diamondChance *= 3;
             }
             if(game.buffs['god_potion']) {
-                totalClick *= 10; totalAuto *= 10; goldMulti *= 10; diamondMulti *= 10; diamondChance *= 10;
+                totalClick = totalClick.times(10); totalAuto = totalAuto.times(10); goldMulti = goldMulti.times(10); diamondMulti = diamondMulti.times(10); diamondChance *= 10;
             }
 
-            cachedAutoCPS = totalAuto * m * goldMulti; 
-            cachedClickPower = totalClick * m * goldMulti;
+            cachedAutoCPS = totalAuto.times(m).times(goldMulti); 
+            cachedClickPower = totalClick.times(m).times(goldMulti);
             cachedGoldMulti = goldMulti;
             cachedDiamondMulti = diamondMulti;
             cachedDiamondChance = diamondChance;
@@ -1034,29 +1021,34 @@
         }
 
         function getTotalMulti() {
-            let m = WORLDS[game.world].multi;
-            let pMulti = 1;
+            let m = new Decimal(WORLDS[game.world].multi);
+            let pMulti = new Decimal(1);
             let equipped = game.inventory.filter(p => p.equipped).sort((a,b)=>b.power-a.power).slice(0,5);
-            equipped.forEach(p => pMulti += p.power);
-            let rMulti = 1 + game.rebirths; 
-            return m * pMulti * rMulti;
+            equipped.forEach(p => pMulti = pMulti.add(p.power));
+            let rMulti = new Decimal(1 + game.rebirths); 
+            return m.times(pMulti).times(rMulti);
         }
 
-        /* --- BULK COST --- */
-        function getSingleCost(bObj, currentLvl) { return Math.floor(bObj.baseC * Math.pow(1.15, currentLvl)); }
+        /* --- BULK COST (DECIMAL) --- */
+        function getSingleCost(bObj, currentLvl) { return bObj.baseC.times(Decimal.pow(1.15, currentLvl)).floor(); }
+        
         function getBulkCost(bObj, startLvl, count) {
             let r = 1.15;
-            let a = bObj.baseC * Math.pow(r, startLvl);
-            if (r === 1) return a * count;
-            return Math.floor(a * (Math.pow(r, count) - 1) / (r - 1));
+            let a = bObj.baseC.times(Decimal.pow(r, startLvl));
+            let num = Decimal.pow(r, count).sub(1);
+            let den = r - 1;
+            return a.times(num).div(den).floor();
         }
+        
         function getMaxBuyable(bObj, startLvl, money) {
             let r = 1.15;
-            let a = bObj.baseC * Math.pow(r, startLvl);
-            if (money < a) return 0;
-            let n = Math.log(1 + (money * (r - 1) / a)) / Math.log(r);
+            let a = bObj.baseC.times(Decimal.pow(r, startLvl));
+            if (money.lt(a)) return 0;
+            let term = money.times(r-1).div(a).add(1);
+            let n = term.log(r);
             return Math.floor(n);
         }
+
         function setBuyMode(val) {
             buyMode = val;
             document.querySelectorAll('.bulk-btn').forEach(b => b.classList.remove('active'));
@@ -1080,8 +1072,8 @@
             manualClickHistory.push(Date.now());
             let power = cachedClickPower;
             let isCrit = Math.random() < cachedCritChance;
-            if(isCrit) power *= 2;
-            if(game.clicks + power < 1.7e308) game.clicks += power;
+            if(isCrit) power = power.times(2);
+            game.clicks = game.clicks.add(power);
             
             spawnText(e.clientX, e.clientY, `+${formatNumber(power)}`, isCrit);
             
@@ -1094,8 +1086,8 @@
             }
             
             if(dropCount > 0) {
-                let gemGain = dropCount * cachedDiamondMulti;
-                game.gems += gemGain;
+                let gemGain = cachedDiamondMulti.times(dropCount);
+                game.gems = game.gems.add(gemGain);
                 spawnText(e.clientX, e.clientY - 60, `+${formatNumber(gemGain)} ダイヤ!`, false, "#00d2ff");
             }
             
@@ -1130,10 +1122,10 @@
 
             document.getElementById('total-pet-count').innerText = game.inventory.length;
 
-            let rCost = 1000000 * Math.pow(10, game.rebirths);
+            let rCost = new Decimal(1000000).times(Decimal.pow(10, game.rebirths));
             if(document.getElementById('rebirth-modal').style.display === 'flex') {
                 document.getElementById('rebirth-cost-final').innerText = formatNumber(rCost) + " Clicks";
-                let pct = (game.clicks / rCost) * 100;
+                let pct = game.clicks.div(rCost).times(100).toNumber();
                 if(pct > 100) pct = 100;
                 let circle = document.getElementById('rebirth-progress-circle');
                 let circumference = 628; 
@@ -1142,23 +1134,33 @@
                 document.getElementById('rebirth-progress-text').innerText = Math.floor(pct) + "%";
                 document.getElementById('rebirth-reward-display').innerText = `+100% 永続倍率 (現在: x${1+game.rebirths})`;
                 let rBtn = document.getElementById('rebirth-execute-btn');
-                rBtn.disabled = game.clicks < rCost;
+                rBtn.disabled = game.clicks.lt(rCost);
             }
 
-            document.querySelectorAll('.upgrade-buy-btn').forEach(btn => { let cost = parseFloat(btn.dataset.cost); btn.disabled = game.clicks < cost; });
-            document.querySelectorAll('.world-unlock-btn').forEach(btn => { let cost = parseFloat(btn.dataset.cost); btn.disabled = game.clicks < cost; });
-            document.querySelectorAll('.diamond-btn').forEach(btn => { let cost = parseFloat(btn.dataset.cost); btn.disabled = game.gems < cost; });
+            document.querySelectorAll('.upgrade-buy-btn').forEach(btn => { 
+                let cost = new Decimal(btn.dataset.cost); 
+                btn.disabled = game.clicks.lt(cost); 
+            });
+            document.querySelectorAll('.world-unlock-btn').forEach(btn => { 
+                let cost = new Decimal(btn.dataset.cost); 
+                btn.disabled = game.clicks.lt(cost); 
+            });
+            document.querySelectorAll('.diamond-btn').forEach(btn => { 
+                let cost = new Decimal(btn.dataset.cost); 
+                btn.disabled = game.gems.lt(cost); 
+            });
 
             if(currentEgg && document.getElementById('egg-buy-modal').style.display === 'flex') {
                 let realAmount = 0;
+                let eggCost = new Decimal(currentEgg.cost);
                 if(eggBuyAmount === 'max') {
-                    realAmount = Math.floor(game.clicks / currentEgg.cost);
+                    realAmount = game.clicks.div(eggCost).floor().toNumber();
                     if(realAmount < 1) realAmount = 1; if(realAmount > 200) realAmount = 200;
                 } else { realAmount = eggBuyAmount; }
-                let totalCost = currentEgg.cost * realAmount;
+                let totalCost = eggCost.times(realAmount);
                 document.getElementById('egg-cost-disp').innerHTML = `<i class="bi bi-cursor-fill"></i> ${formatNumber(totalCost)}`;
                 let buyBtn = document.querySelector('.btn-buy-once');
-                if(game.clicks < totalCost) {
+                if(game.clicks.lt(totalCost)) {
                     buyBtn.style.opacity = 0.5; buyBtn.style.pointerEvents = 'none'; buyBtn.style.background = '#95a5a6';
                 } else {
                     buyBtn.style.opacity = 1; buyBtn.style.pointerEvents = 'auto'; buyBtn.style.background = '#2ecc71';
@@ -1172,6 +1174,32 @@
                     let sec = Math.floor(game.buffs[key]%60);
                     el.innerText = `${min}:${sec.toString().padStart(2,'0')}`;
                 }
+            }
+        }
+
+        function updateProgressBar() {
+            let currentWorld = WORLDS[game.world];
+            let nextWorld = WORLDS[game.world + 1];
+            
+            if (nextWorld) {
+                let currentCost = new Decimal(currentWorld.cost);
+                let nextCost = new Decimal(nextWorld.cost);
+                
+                // Calculate percentage based on range between current world and next world
+                // Formula: (CurrentScore - CurrentWorldCost) / (NextWorldCost - CurrentWorldCost)
+                let range = nextCost.sub(currentCost);
+                let progress = game.clicks.sub(currentCost);
+                if (progress.lt(0)) progress = new Decimal(0);
+                
+                let pct = progress.div(range).times(100).toNumber();
+                if (pct > 100) pct = 100;
+                if (pct < 0) pct = 0;
+
+                document.getElementById('world-progress-bar').style.width = pct + "%";
+                document.getElementById('world-progress-text').innerText = `次のワールドまで: ${pct.toFixed(2)}%`;
+            } else {
+                document.getElementById('world-progress-bar').style.width = "100%";
+                document.getElementById('world-progress-text').innerText = "MAX WORLD REACHED";
             }
         }
         
@@ -1216,7 +1244,7 @@
                 let isLocked = game.world < b.worldReq; 
                 if(isLocked && b.worldReq > 0) return;
                 
-                let amount = 0, cost = 0;
+                let amount = 0, cost = new Decimal(0);
                 if(buyMode === 'max') {
                     amount = getMaxBuyable(b, lvl, game.clicks);
                     if(amount === 0) { amount = 1; cost = getSingleCost(b, lvl); }
@@ -1254,7 +1282,7 @@
             let b = BUILDING_TYPES.find(x => x.id === id);
             if(!b) return;
             let lvl = game.buildings[id] || 0;
-            let amount = 0, cost = 0;
+            let amount = 0, cost = new Decimal(0);
             if(buyMode === 'max') {
                 amount = getMaxBuyable(b, lvl, game.clicks);
                 if(amount > 0) cost = getBulkCost(b, lvl, amount);
@@ -1262,8 +1290,8 @@
                 amount = buyMode;
                 cost = getBulkCost(b, lvl, amount);
             }
-            if (amount > 0 && game.clicks >= cost) {
-                game.clicks -= cost;
+            if (amount > 0 && game.clicks.gte(cost)) {
+                game.clicks = game.clicks.sub(cost);
                 game.buildings[id] = lvl + amount;
                 recalcStats();
                 renderUpgrades();
@@ -1318,14 +1346,15 @@
         function executeBuyEgg() {
             if(!currentEgg) return;
             let realAmount = 0;
+            let eggCost = new Decimal(currentEgg.cost);
             if(eggBuyAmount === 'max') {
-                realAmount = Math.floor(game.clicks / currentEgg.cost);
+                realAmount = game.clicks.div(eggCost).floor().toNumber();
                 if(realAmount < 1) { if(autoHatchEnabled) stopAutoHatch(); return; }
                 if(realAmount > 200) realAmount = 200;
             } else { realAmount = eggBuyAmount; }
-            let cost = currentEgg.cost * realAmount;
-            if(game.clicks >= cost) {
-                game.clicks -= cost;
+            let cost = eggCost.times(realAmount);
+            if(game.clicks.gte(cost)) {
+                game.clicks = game.clicks.sub(cost);
                 if(!autoHatchEnabled) closeModal('egg-buy-modal');
                 hatchPets(realAmount);
             } else { if(autoHatchEnabled) stopAutoHatch(); }
@@ -1361,8 +1390,9 @@
         }
         function buyDiamondItem(id) {
             let item = DIAMOND_SHOP.find(x=>x.id===id);
-            if(game.gems>=item.cost) {
-                game.gems-=item.cost;
+            let cost = new Decimal(item.cost);
+            if(game.gems.gte(cost)) {
+                game.gems = game.gems.sub(cost);
                 if(item.type==='buff') {
                     if(game.buffs[id]) game.buffs[id] += item.duration; else game.buffs[id] = item.duration;
                     recalcStats();
@@ -1392,155 +1422,6 @@
             card.style.borderColor = RARITY_COLORS[rarity]; card.style.transform = "scale(1)"; card.style.opacity = "1";
             card.innerHTML = `<i class="bi ${icon}" style="color:${RARITY_COLORS[rarity]};"></i><div class="hatch-name">${name}</div><div class="hatch-rarity" style="color:${RARITY_COLORS[rarity]};">${sub}</div>`;
             grid.appendChild(card);
-        }
-
-        /* --- COMPETITIVE LEADERBOARD LOGIC (DYNAMIC LOG DISTRIBUTION) --- */
-        function initLeaderboard() {
-            leaderboardData = [];
-            let myScore = Math.max(game.clicks, 100);
-            
-            for(let i=1; i<=10000; i++) {
-                let ratio = (10000 - i) / 10000; 
-                let s = 100 * Math.pow((myScore * 100) / 100, ratio);
-                leaderboardData.push({ id:i, name:`Player${Math.floor(Math.random()*999999)}`, score: s, isMe:false });
-            }
-        }
-
-        function updateLeaderboard() {
-            let myCPS = Math.max(cachedAutoCPS + (manualClickHistory.length * (cachedClickPower/2)), 1);
-            let myScore = Math.max(game.clicks, 100);
-
-            // 1位と最下位の基準点を設定 (ダイナミックレンジ)
-            let maxBotScore = 0;
-            leaderboardData.forEach(p => { if(p.score > maxBotScore) maxBotScore = p.score; });
-            
-            let targetTop = Math.max(maxBotScore, myScore * 10);
-            if(targetTop > myScore * 1000) targetTop = myScore * 1000;
-            if(targetTop < 1e15) targetTop = 1e15; 
-
-            let targetBottom = 100;
-            
-            let logTop = Math.log10(targetTop);
-            let logBottom = Math.log10(targetBottom);
-            
-            leaderboardData.forEach((p, idx) => {
-                let rankRatio = idx / 9999; 
-                let curve = Math.pow(1 - rankRatio, 3); 
-                
-                let logIdeal = logBottom + (logTop - logBottom) * curve;
-                let idealScore = Math.pow(10, logIdeal);
-                
-                if (idealScore > myScore * 0.1 && idealScore < myScore * 10) {
-                    idealScore = (idealScore + myScore) / 2;
-                }
-
-                let diff = idealScore - p.score;
-                let baseGrowth = p.score * 0.01;
-                
-                if (diff > 0) {
-                    p.score += diff * 0.05 + baseGrowth;
-                } else {
-                    p.score += baseGrowth * 0.1;
-                }
-                
-                if (idx === 0 && p.score < myScore * 1.1) {
-                    p.score = myScore * 1.1 + (myCPS * 10); 
-                }
-                if (p.score < myScore && p.score > myScore * 0.8) {
-                     p.score += myCPS * 2; 
-                }
-                // Cap
-                if(p.score > 1.7e308) p.score = 1.7e308;
-            });
-
-            if(document.getElementById('leaderboard-modal').style.display === 'flex') {
-                renderLeaderboard();
-            }
-        }
-
-        function renderLeaderboard() {
-            let myEntry = { id:'me', name:"自分 (You)", score:game.clicks, cps: cachedAutoCPS, isMe:true };
-            let fullList = [...leaderboardData, myEntry].sort((a,b)=>b.score-a.score);
-            
-            let myRankIndex = fullList.findIndex(x => x.isMe);
-            let myRank = myRankIndex + 1;
-
-            const footer = document.getElementById('lb-sticky-footer');
-            footer.innerHTML = "";
-            let myStickyRow = document.createElement('div'); 
-            myStickyRow.className = "lb-row me";
-            myStickyRow.style.borderBottom = "none";
-            
-            let stickyDiff = "";
-            if(myRank > 1) {
-                let ahead = fullList[myRank-2];
-                let diff = ahead.score - game.clicks;
-                let enemySpeed = ahead.score * 0.01;
-                let mySpeed = Math.max(cachedAutoCPS * 5, game.clicks * 0.02);
-                
-                if(mySpeed > enemySpeed) {
-                    let sec = diff / (mySpeed - enemySpeed);
-                    stickyDiff = `<span style="color:#2ecc71; font-size:0.8rem; margin-left:10px;">↑ あと${formatTime(sec)}で抜けます</span>`;
-                } else {
-                    stickyDiff = `<span style="color:#95a5a6; font-size:0.8rem; margin-left:10px;">相手が速すぎます</span>`;
-                }
-            }
-            if(myRank < fullList.length) {
-                let behind = fullList[myRank];
-                let diff = game.clicks - behind.score;
-                let enemySpeed = behind.score * 0.05; 
-                let mySpeed = cachedAutoCPS;
-                
-                if(enemySpeed > mySpeed) {
-                    let sec = diff / (enemySpeed - mySpeed);
-                    stickyDiff += `<span style="color:#e74c3c; font-size:0.8rem; margin-left:10px;">↓ あと${formatTime(sec)}で抜かれます</span>`;
-                }
-            }
-
-            myStickyRow.innerHTML = `
-                <div class="lb-rank">#${myRank}</div>
-                <div class="lb-name">自分 (You) ${stickyDiff}</div>
-                <div class="lb-score">${formatNumber(game.clicks)}</div>
-            `;
-            footer.appendChild(myStickyRow);
-
-            const cont = document.getElementById('lb-content'); cont.innerHTML="";
-            let start = (lbPage-1)*100;
-            let end = start + 100;
-            let pageList = fullList.slice(start, end);
-            
-            pageList.forEach((p, i) => {
-                let rank = start + i + 1;
-                let d = document.createElement('div'); d.className=`lb-row ${p.isMe?'me':''}`;
-                let styleStr = "";
-                if(rank === 1) styleStr = "color:#f1c40f; font-weight:900; font-size:1.1rem;";
-                else if(rank === 2) styleStr = "color:#bdc3c7; font-weight:800;";
-                else if(rank === 3) styleStr = "color:#d35400; font-weight:800;";
-
-                d.innerHTML=`
-                    <div class="lb-rank" style="${styleStr}">#${rank}</div>
-                    <div class="lb-name">${p.name}</div>
-                    <div class="lb-score">${formatNumber(p.score)}</div>
-                `;
-                cont.appendChild(d);
-            });
-            document.getElementById('lb-page-disp').innerText = `${lbPage} / ${Math.ceil(fullList.length/100)}`;
-        }
-        
-        function formatTime(sec) {
-            if(sec < 0) return "0秒";
-            if(!isFinite(sec)) return "計算中";
-            if(sec > 3600*24) return ">1日";
-            if(sec > 3600) return Math.floor(sec/3600) + "時間";
-            if(sec > 60) return Math.floor(sec/60) + "分" + Math.floor(sec%60) + "秒";
-            return Math.floor(sec) + "秒";
-        }
-
-        function changeLbPage(d) { 
-            lbPage+=d; 
-            if(lbPage<1)lbPage=1; 
-            if(lbPage>101)lbPage=101; 
-            renderLeaderboard(); 
         }
 
         /* --- UTILS --- */
@@ -1574,8 +1455,9 @@
                 let unlocked = w.id <= game.world;
                 let canBuy = w.id === game.world + 1;
                 if(canBuy) nextLocked = w;
-                
-                let btn = unlocked ? `<button class="buy-btn" style="background:#3498db; border-color:#2980b9;" onclick="changeWorld(${w.id})">テレポート</button>` : (canBuy ? `<button class="buy-btn world-unlock-btn" data-cost="${w.cost}" onclick="unlockWorld(${w.id})">解放: ${formatNumber(w.cost)}</button>` : `<button class="buy-btn" disabled>ロック</button>`);
+                let wCost = new Decimal(w.cost);
+
+                let btn = unlocked ? `<button class="buy-btn" style="background:#3498db; border-color:#2980b9;" onclick="changeWorld(${w.id})">テレポート</button>` : (canBuy ? `<button class="buy-btn world-unlock-btn" data-cost="${w.cost}" onclick="unlockWorld(${w.id})">解放: ${formatNumber(wCost)}</button>` : `<button class="buy-btn" disabled>ロック</button>`);
                 let div = document.createElement('div'); div.className = `item-card ${!unlocked&&!canBuy?'locked-upgrade':''}`;
                 if(game.world===w.id) div.style.borderColor = "#2ecc71";
                 div.innerHTML = `<div class="item-icon"><i class="bi bi-globe"></i></div><div><div style="font-weight:bold;">${w.name}</div><div style="font-size:0.8rem;">倍率: x${formatNumber(w.multi)}</div></div>${btn}`;
@@ -1584,9 +1466,11 @@
             });
 
             // Update Time Estimator
-            if(nextLocked && cachedAutoCPS > 0) {
-                let needed = nextLocked.cost - game.clicks;
-                let time = needed / cachedAutoCPS;
+            if(nextLocked && cachedAutoCPS.gt(0)) {
+                let wCost = new Decimal(nextLocked.cost);
+                let needed = wCost.sub(game.clicks);
+                if(needed.lt(0)) needed = new Decimal(0);
+                let time = needed.div(cachedAutoCPS).toNumber();
                 document.getElementById('next-world-timer').innerText = `次のワールド (${nextLocked.name}) まで: ${formatTime(time)}`;
             } else if (!nextLocked) {
                 document.getElementById('next-world-timer').innerText = "全ワールド解放済み！";
@@ -1595,7 +1479,13 @@
             }
         }
         function unlockWorld(id) {
-            if(game.clicks>=WORLDS[id].cost) { game.clicks-=WORLDS[id].cost; game.world=id; changeWorld(id); renderWorlds(); renderUpgrades(); recalcStats(); }
+            let cost = new Decimal(WORLDS[id].cost);
+            if(game.clicks.gte(cost)) { 
+                game.clicks = game.clicks.sub(cost); 
+                game.world=id; 
+                changeWorld(id); 
+                renderWorlds(); renderUpgrades(); recalcStats(); 
+            }
         }
         function changeWorld(id, force) {
             if(game.world!==id && !force) game.world=id;
@@ -1605,35 +1495,63 @@
             renderUpgrades(); recalcStats();
         }
         function doRebirth() {
-            let cost = 1000000 * Math.pow(10, game.rebirths);
-            if(game.clicks>=cost) {
-                game.clicks=0; game.rebirths++; game.buildings={}; game.world=0;
+            let cost = new Decimal(1000000).times(Decimal.pow(10, game.rebirths));
+            if(game.clicks.gte(cost)) {
+                game.clicks=new Decimal(0); game.rebirths++; game.buildings={}; game.world=0;
                 changeWorld(0); renderUpgrades(); renderWorlds(); recalcStats(); 
                 closeModal('rebirth-modal');
                 showNotification("リバース成功！永続倍率獲得！", 'success');
             }
         }
-        function saveGame() { localStorage.setItem('ps99_ultimate_v3.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
+        function saveGame() { localStorage.setItem('ps99_infinity_v5.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
         function loadGame() {
-            let saved = localStorage.getItem('ps99_ultimate_v3.0_save');
+            let saved = localStorage.getItem('ps99_infinity_v5.0_save');
             if(saved) {
-                try { let parsed = JSON.parse(saved); if(parsed.version === GAME_VERSION) { game = { ...game, ...parsed }; } } catch(e) {}
+                try { 
+                    let parsed = JSON.parse(saved); 
+                    if(parsed.version >= 3.0) { 
+                        parsed.clicks = new Decimal(parsed.clicks);
+                        parsed.gems = new Decimal(parsed.gems);
+                        game = { ...game, ...parsed }; 
+                    } 
+                } catch(e) {}
             }
         }
         function downloadSave() { let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(game)],{type:'application/json'})); a.download=`ps99_save.json`; a.click(); }
         function uploadSave(i) {
-            let r=new FileReader(); r.onload=e=>{ try{ let d = JSON.parse(e.target.result); if(d.version === GAME_VERSION) { game={...game, ...d}; renderUpgrades(); renderInventory(); renderWorlds(); recalcStats(); showNotification("復元完了", 'success'); } }catch(x){showNotification("エラー", 'error');} };
+            let r=new FileReader(); r.onload=e=>{ 
+                try{ 
+                    let d = JSON.parse(e.target.result); 
+                    if(d.version >= 3.0) { 
+                        d.clicks = new Decimal(d.clicks);
+                        d.gems = new Decimal(d.gems);
+                        game={...game, ...d}; 
+                        renderUpgrades(); renderInventory(); renderWorlds(); recalcStats(); 
+                        showNotification("復元完了", 'success'); 
+                    } 
+                }catch(x){showNotification("エラー", 'error');} 
+            };
             if(i.files[0]) r.readAsText(i.files[0]);
         }
         function hardReset() { 
             if(confirm("本当に全データを削除しますか？\nこの操作は取り消せません。")) { 
-                localStorage.removeItem('ps99_ultimate_v3.0_save'); 
+                localStorage.removeItem('ps99_infinity_v5.0_save'); 
                 showNotification("データを削除しました。リロードします...", 'success');
                 setTimeout(() => location.reload(), 1500);
             } 
         }
+        
+        // Helper to format time (Seconds -> Readable)
+        function formatTime(sec) {
+            if(sec < 0) return "0s";
+            if(!isFinite(sec)) return "---";
+            if(sec > 3600*24) return ">1d";
+            if(sec > 3600) return Math.floor(sec/3600) + "h " + Math.floor((sec%3600)/60) + "m";
+            if(sec > 60) return Math.floor(sec/60) + "m " + Math.floor(sec%60) + "s";
+            return Math.floor(sec) + "s";
+        }
 
-        window.openModal=function(id){ if(id==='leaderboard-modal')renderLeaderboard(); document.getElementById(id).style.display='flex'; }
+        window.openModal=function(id){ document.getElementById(id).style.display='flex'; }
         window.closeModal=function(id){ document.getElementById(id).style.display='none'; }
         
         const tooltip=document.getElementById('custom-tooltip');
