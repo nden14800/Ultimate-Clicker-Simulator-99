@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Clicker Simulator 99 - Rivalry Update</title>
+    <title>Ultimate Clicker Simulator 99 - Final Balanced</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -681,7 +681,7 @@
 
     <script>
         /* ================= CONFIGURATION ================= */
-        const GAME_VERSION = 2.6; 
+        const GAME_VERSION = 2.7; 
         const SUFFIXES = ["K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qg", "Uqg", "Dqg", "Tqg", "Qaqg", "Qiqg", "Sxqg", "Spqg", "Ocqg", "Noqg", "Qqg", "Uqqg", "Dqqg", "Tqqg", "Qaqqg", "Qiqqg", "Sxqqg", "Spqqg", "Ocqqg", "Noqqg", "Sg", "Usg", "Dsg", "Tsg", "Qasg", "Qisg", "Sxsg", "Spsg", "Ocsg", "Nosg", "Spg", "Uspg", "Dspg", "Tspg", "Qaspg", "Qispg", "Sxspg", "Spspg", "Ocspg", "Nospg", "Og", "Uog", "Dog", "Tog", "Qaog", "Qiog", "Sxog", "Spog", "Ocog", "Noog", "Ng", "Ung", "Dng", "Tng", "Qang", "Qing", "Sxng", "Spng", "Ocng", "Nong", "Ce", "Uce"];
         
         const RARITY_COLORS = {
@@ -973,7 +973,7 @@
         function initGame() {
             loadGame(); 
             recalcStats();
-            initLeaderboard();
+            initLeaderboard(); // 初回生成
             renderUpgrades(); renderEggs(); renderShop(); renderWorlds(); renderInventory();
             
             setInterval(gameLoop, 100); 
@@ -1029,7 +1029,6 @@
             if(game.buffs['crit_potion']) critChance *= 2;
             if(game.buffs['gold_potion']) goldMulti *= 2;
             
-            // New Potions Logic
             if(game.buffs['click_frenzy']) totalClick *= 5;
             if(game.buffs['ultra_luck']) diamondChance *= 5;
             if(game.buffs['mega_potion']) {
@@ -1055,7 +1054,7 @@
             let pMulti = 1;
             let equipped = game.inventory.filter(p => p.equipped).sort((a,b)=>b.power-a.power).slice(0,5);
             equipped.forEach(p => pMulti += p.power);
-            let rMulti = 1 + game.rebirths; // Rebirth adds +100% additive, effectively x(1+rebirths)
+            let rMulti = 1 + game.rebirths; 
             return m * pMulti * rMulti;
         }
 
@@ -1146,7 +1145,6 @@
 
             document.getElementById('total-pet-count').innerText = game.inventory.length;
 
-            // Rebirth Progress
             let rCost = 1000000 * Math.pow(10, game.rebirths);
             if(document.getElementById('rebirth-modal').style.display === 'flex') {
                 document.getElementById('rebirth-cost-final').innerText = formatNumber(rCost) + " Clicks";
@@ -1182,7 +1180,6 @@
                 }
             }
             
-            // Only update time text here
             for(let key in game.buffs) {
                 let el = document.getElementById(`buff-timer-${key}`);
                 if(el) {
@@ -1195,10 +1192,9 @@
         
         function updateBuffDisplay() {
             const buffContainer = document.getElementById('active-buffs');
-            // Check if rebuild needed (count diff)
             let currentChildren = buffContainer.childElementCount;
             let buffKeys = Object.keys(game.buffs);
-            if(currentChildren === buffKeys.length) return; // Optimization: only rebuild if count changes
+            if(currentChildren === buffKeys.length) return;
 
             buffContainer.innerHTML = "";
             for(let key in game.buffs) {
@@ -1405,71 +1401,90 @@
             grid.appendChild(card);
         }
 
-        /* --- COMPETITIVE LEADERBOARD LOGIC (RIVALRY UPDATE) --- */
+        /* --- COMPETITIVE LEADERBOARD LOGIC (DYNAMIC LOG DISTRIBUTION) --- */
         function initLeaderboard() {
             leaderboardData = [];
-            
-            let myScore = game.clicks > 100 ? game.clicks : 100;
-            // Cap the visual max to something absurd but related to player
-            let topScore = myScore * 1e20;
-            if(topScore < 1e30) topScore = 1e30; 
+            // 単純な初期化だけ行い、updateで値を修正する方針にする
+            // 初期状態ではプレイヤーと同等の範囲に散らばらせる
+            let myScore = Math.max(game.clicks, 100);
             
             for(let i=1; i<=10000; i++) {
-                let pos = (i - 1) / 9999; 
-                let curve = Math.pow(1 - pos, 15); 
-                let score = 100 + (topScore - 100) * curve;
-                let noise = 0.9 + Math.random() * 0.2;
-                score *= noise;
-
-                // CPS Logic: Proportional to score
-                let growthRate = 0;
-                if(i <= 100) growthRate = 0.05; // Top players fast
-                else if(i <= 1000) growthRate = 0.01;
-                else growthRate = 0.001; 
-                
-                growthRate *= (0.8 + Math.random() * 0.4);
-                let cps = score * growthRate;
-                if(cps < 1) cps = 1;
-
-                leaderboardData.push({ id:i, name:`Player${Math.floor(Math.random()*999999)}`, score: score, cps: cps, growthRate: growthRate, isMe:false });
+                // 初期値はあまり重要ではない（すぐ上書きされるため）
+                // しかし見栄えのために対数分布させておく
+                let ratio = (10000 - i) / 10000; // 0 to 1
+                // 100 ~ myScore * 100 の範囲
+                let s = 100 * Math.pow((myScore * 100) / 100, ratio);
+                leaderboardData.push({ id:i, name:`Player${Math.floor(Math.random()*999999)}`, score: s, isMe:false });
             }
         }
 
         function updateLeaderboard() {
-            let myCPS = cachedAutoCPS + (manualClickHistory.length * (cachedClickPower/2));
-            if(myCPS < 1) myCPS = 1;
+            let myCPS = Math.max(cachedAutoCPS + (manualClickHistory.length * (cachedClickPower/2)), 1);
+            let myScore = Math.max(game.clicks, 100);
 
+            // 1位と最下位の基準点を設定 (ダイナミックレンジ)
+            // 常にプレイヤーの上にも下にもボットがいるようにする
+            // Top: プレイヤーの1000倍くらい（追いつける範囲）
+            // Bottom: 100固定
+            
+            // ただし、既にプレイヤーより高いスコアを持つボットがいればそれを尊重する
+            let maxBotScore = 0;
+            leaderboardData.forEach(p => { if(p.score > maxBotScore) maxBotScore = p.score; });
+            
+            let targetTop = Math.max(maxBotScore, myScore * 10);
+            // 天井があまりに高すぎると追いつけないので、プレイヤーが近づいたら天井も逃げるが、少しゆっくりにする
+            if(targetTop > myScore * 1000) targetTop = myScore * 1000;
+            if(targetTop < 1e15) targetTop = 1e15; // 最低保証(Qadくらい)
+
+            let targetBottom = 100;
+            
+            // 対数空間での計算
+            let logTop = Math.log10(targetTop);
+            let logBottom = Math.log10(targetBottom);
+            
             leaderboardData.forEach((p, idx) => {
-                // RIVALRY LOGIC: Top 10 players are extremely competitive against YOU
-                if (idx < 10) {
-                    let baseCPS = p.score * p.growthRate;
-                    
-                    // 1. Rubber Band: If they are behind or close to player, they surge
-                    if (p.score < game.clicks * 1.5) {
-                        // Boost massively to create competition
-                        let competitiveSpeed = myCPS * 1.1; // Slightly faster than player
-                        p.cps = Math.max(baseCPS, competitiveSpeed);
-                        
-                        // Random "Surge" (They bought an upgrade!)
-                        if (Math.random() < 0.05) {
-                            p.score += myCPS * 10; // Instant jump
-                        }
-                    } 
-                    // 2. Rubber Band: If they are WAY ahead, they slow down (get bored/stuck)
-                    else if (p.score > game.clicks * 5) {
-                        p.cps = baseCPS * 0.1; // Slow down
-                    }
-                    // Default behavior
-                    else {
-                        p.cps = baseCPS;
-                    }
+                // この順位における「理想的なスコア」を計算
+                // idx=0 (1位) -> logTop
+                // idx=9999 (10000位) -> logBottom
+                let rankRatio = idx / 9999; 
+                // 少しカーブさせて上位を詰まらせる（競争激化）
+                let curve = Math.pow(1 - rankRatio, 3); // 3乗カーブくらいが自然
+                
+                let logIdeal = logBottom + (logTop - logBottom) * curve;
+                let idealScore = Math.pow(10, logIdeal);
+                
+                // プレイヤー周辺の補正 (断絶防止)
+                // プレイヤーのスコアに近い順位のボットは、プレイヤーのスコアに寄せる
+                if (idealScore > myScore * 0.1 && idealScore < myScore * 10) {
+                    // プレイヤーの周りは密度を上げるために、idealScoreをmyScoreに近づける
+                    idealScore = (idealScore + myScore) / 2;
+                }
+
+                // スコア更新 (ラバーバンド)
+                // いきなりidealScoreにするのではなく、徐々に近づける（CPSとして表現）
+                let diff = idealScore - p.score;
+                
+                // 1. 基本成長: 自分のスコアの1%くらいは常に伸びる
+                let baseGrowth = p.score * 0.01;
+                
+                // 2. 補正成長: 理想値より低いなら加速、高いなら減速
+                if (diff > 0) {
+                    // 遅れているなら追いつくためにブースト
+                    p.score += diff * 0.05 + baseGrowth;
                 } else {
-                    // Standard Logic for everyone else
-                    p.score += p.cps;
+                    // 進みすぎているなら減速（成長を止める、あるいは微増）
+                    p.score += baseGrowth * 0.1;
                 }
                 
-                // Add CPS
-                p.score += p.cps;
+                // 1位のボットはプレイヤーに対して「負けず嫌い」を発動
+                if (idx === 0 && p.score < myScore * 1.1) {
+                    p.score = myScore * 1.1 + (myCPS * 10); // 常に少し上に逃げる
+                }
+                
+                // 2位以下のボットも、プレイヤーが追い抜いたら「猛追」モード
+                if (p.score < myScore && p.score > myScore * 0.8) {
+                     p.score += myCPS * 2; // プレイヤーの2倍の速度で追ってくる
+                }
             });
 
             if(document.getElementById('leaderboard-modal').style.display === 'flex') {
@@ -1481,32 +1496,39 @@
             let myEntry = { id:'me', name:"自分 (You)", score:game.clicks, cps: cachedAutoCPS, isMe:true };
             let fullList = [...leaderboardData, myEntry].sort((a,b)=>b.score-a.score);
             
-            // Find my rank
             let myRankIndex = fullList.findIndex(x => x.isMe);
             let myRank = myRankIndex + 1;
 
-            // Render Sticky Footer
             const footer = document.getElementById('lb-sticky-footer');
             footer.innerHTML = "";
             let myStickyRow = document.createElement('div'); 
             myStickyRow.className = "lb-row me";
             myStickyRow.style.borderBottom = "none";
             
-            // Calc Overtake/Overtaken for sticky
             let stickyDiff = "";
             if(myRank > 1) {
                 let ahead = fullList[myRank-2];
                 let diff = ahead.score - game.clicks;
-                if(myEntry.cps > ahead.cps) {
-                    let sec = diff / (myEntry.cps - ahead.cps);
+                // 相手のCPSは疑似的に計算 (差分の5%で迫ってると仮定)
+                let enemySpeed = ahead.score * 0.01;
+                let mySpeed = Math.max(cachedAutoCPS * 5, game.clicks * 0.02); // 手動含め
+                
+                if(mySpeed > enemySpeed) {
+                    let sec = diff / (mySpeed - enemySpeed);
                     stickyDiff = `<span style="color:#2ecc71; font-size:0.8rem; margin-left:10px;">↑ あと${formatTime(sec)}で抜けます</span>`;
+                } else {
+                    stickyDiff = `<span style="color:#95a5a6; font-size:0.8rem; margin-left:10px;">相手が速すぎます</span>`;
                 }
             }
             if(myRank < fullList.length) {
                 let behind = fullList[myRank];
-                if(behind.cps > myEntry.cps) {
-                    let diff = game.clicks - behind.score;
-                    let sec = diff / (behind.cps - myEntry.cps);
+                let diff = game.clicks - behind.score;
+                // 猛追ロジック
+                let enemySpeed = behind.score * 0.05; // 後ろは速い
+                let mySpeed = cachedAutoCPS;
+                
+                if(enemySpeed > mySpeed) {
+                    let sec = diff / (enemySpeed - mySpeed);
                     stickyDiff += `<span style="color:#e74c3c; font-size:0.8rem; margin-left:10px;">↓ あと${formatTime(sec)}で抜かれます</span>`;
                 }
             }
@@ -1518,7 +1540,6 @@
             `;
             footer.appendChild(myStickyRow);
 
-            // Render List
             const cont = document.getElementById('lb-content'); cont.innerHTML="";
             let start = (lbPage-1)*100;
             let end = start + 100;
@@ -1526,8 +1547,6 @@
             
             pageList.forEach((p, i) => {
                 let rank = start + i + 1;
-                let diffText = "";
-                
                 let d = document.createElement('div'); d.className=`lb-row ${p.isMe?'me':''}`;
                 let styleStr = "";
                 if(rank === 1) styleStr = "color:#f1c40f; font-weight:900; font-size:1.1rem;";
@@ -1536,7 +1555,7 @@
 
                 d.innerHTML=`
                     <div class="lb-rank" style="${styleStr}">#${rank}</div>
-                    <div class="lb-name">${p.name} <span class="lb-diff">${diffText}</span></div>
+                    <div class="lb-name">${p.name}</div>
                     <div class="lb-score">${formatNumber(p.score)}</div>
                 `;
                 cont.appendChild(d);
@@ -1546,7 +1565,7 @@
         
         function formatTime(sec) {
             if(sec < 0) return "0秒";
-            if(!isFinite(sec)) return "∞";
+            if(!isFinite(sec)) return "計算中";
             if(sec > 3600*24) return ">1日";
             if(sec > 3600) return Math.floor(sec/3600) + "時間";
             if(sec > 60) return Math.floor(sec/60) + "分" + Math.floor(sec%60) + "秒";
@@ -1615,9 +1634,9 @@
                 showNotification("リバース成功！永続倍率獲得！", 'success');
             }
         }
-        function saveGame() { localStorage.setItem('ps99_ultimate_v2.6_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
+        function saveGame() { localStorage.setItem('ps99_ultimate_v2.7_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
         function loadGame() {
-            let saved = localStorage.getItem('ps99_ultimate_v2.6_save');
+            let saved = localStorage.getItem('ps99_ultimate_v2.7_save');
             if(saved) {
                 try { let parsed = JSON.parse(saved); if(parsed.version === GAME_VERSION) { game = { ...game, ...parsed }; } } catch(e) {}
             }
@@ -1629,7 +1648,7 @@
         }
         function hardReset() { 
             if(confirm("本当に全データを削除しますか？\nこの操作は取り消せません。")) { 
-                localStorage.removeItem('ps99_ultimate_v2.6_save'); 
+                localStorage.removeItem('ps99_ultimate_v2.7_save'); 
                 showNotification("データを削除しました。リロードします...", 'success');
                 setTimeout(() => location.reload(), 1500);
             } 
