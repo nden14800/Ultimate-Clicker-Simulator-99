@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate Clicker Simulator 99 - Rivalry Update</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --panel-bg: rgba(20, 25, 40, 0.95);
+            --accent: #00d2ff;
+            --text-main: #ffffff;
+            --btn-green: #2ecc71;
+            --btn-green-shadow: #27ae60;
+            
+            /* Rarity Colors */
+            --rarity-basic: #b2bec3;
+            --rarity-rare: #55efc4;
+            --rarity-epic: #0984e3;
+            --rarity-legendary: #fdcb6e;
+            --rarity-mythical: #d63031;
+            --rarity-divine: #e056fd;
+            --rarity-exclusive: #6c5ce7;
+            --rarity-secret: #000000;
+            --rarity-taco: #f1c40f;
+            --rarity-potion: #e84393;
+            --rarity-godly: #ff0055;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            transition: background 1s ease;
+        }
+
+        /* --- Notification Area --- */
+        #notification-area {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; gap: 10px; z-index: 11000;
+            pointer-events: none; width: 90%; max-width: 400px;
+        }
+        .custom-notif {
+            background: rgba(0, 0, 0, 0.9); color: white; padding: 12px 25px;
+            border-radius: 50px; border: 2px solid rgba(255,255,255,0.15);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            font-weight: 700; text-align: center; font-size: 0.95rem;
+            animation: notifSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, notifFadeOut 0.5s ease-in 3.5s forwards;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            backdrop-filter: blur(8px);
+        }
+        @keyframes notifSlideIn { from { transform: translateY(-50px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes notifFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+
+        /* --- Tooltip --- */
+        #custom-tooltip {
+            position: fixed;
+            background: rgba(15, 15, 20, 0.98);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            pointer-events: none;
+            z-index: 12000;
+            display: none;
+            min-width: 250px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            transition: border-color 0.2s;
+        }
+        .tooltip-header { font-weight: 800; font-size: 1.2rem; border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 8px; color: #fff; }
+        .tooltip-desc { font-size: 0.95rem; color: #ccc; margin-bottom: 10px; line-height: 1.4; }
+        .rarity-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 320px;
+            background: rgba(0,0,0,0.6);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 6px solid transparent;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .stat-card:hover { transform: translateX(5px); background: rgba(255,255,255,0.12); }
+        .stat-icon { font-size: 1.8rem; }
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.3rem; font-weight: 800; }
+
+        .rebirth-stat-box {
+            background: linear-gradient(135deg, rgba(142, 68, 173, 0.4), rgba(155, 89, 182, 0.2));
+            border: 1px solid rgba(142, 68, 173, 0.5);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .rebirth-val { font-weight: 900; color: #e056fd; text-shadow: 0 0 5px rgba(224, 86, 253, 0.5); }
+
+        .sidebar-btn {
+            background: #34495e; color: white; border: 2px solid #2c3e50;
+            padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold;
+            display: flex; align-items: center; gap: 10px; justify-content: center;
+            transition: 0.2s; margin-top: 5px; box-shadow: 0 4px 0 #2c3e50;
+        }
+        .sidebar-btn:active { transform: translateY(4px); box-shadow: none; }
+        .sidebar-btn:hover { background: #3e5871; }
+
+        /* --- Active Buffs --- */
+        #active-buffs {
+            position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column-reverse; gap: 10px; z-index: 1500;
+        }
+        .buff-pill {
+            background: rgba(20, 20, 30, 0.9); border: 2px solid #555; padding: 10px 18px; border-radius: 30px;
+            color: white; display: flex; align-items: center; gap: 12px; font-weight: bold; font-size: 0.95rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); width: fit-content; transition: transform 0.2s;
+        }
+        .buff-intro { animation: slideIn 0.3s ease-out; }
+        .buff-pill:hover { transform: scale(1.05); }
+        @keyframes slideIn { from{transform:translateX(-100%); opacity:0;} to{transform:translateX(0); opacity:1;} }
+
+        /* --- Main Area --- */
+        .main-area {
+            flex: 1; position: relative; display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+
+        .cps-container { display: flex; gap: 20px; margin-bottom: 30px; }
+        .cps-badge {
+            background: rgba(0,0,0,0.4); padding: 8px 20px; border-radius: 20px;
+            color: rgba(255,255,255,0.9); font-size: 1.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .click-zone { width: 340px; height: 340px; position: relative; z-index: 10; }
+        
+        #click-btn {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff7675, #d63031);
+            border: 12px solid #fff;
+            box-shadow: 0 15px 0 #c0392b, 0 30px 60px rgba(0,0,0,0.5), inset 0 10px 20px rgba(255,255,255,0.2);
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            font-size: 7rem; color: white; transition: transform 0.05s; outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #click-btn:active { transform: scale(0.95) translateY(10px); box-shadow: 0 5px 0 #c0392b; }
+
+        .floating-text {
+            position: absolute; font-weight: 900; pointer-events: none;
+            text-shadow: 2px 2px 0 #000; animation: floatUp 0.8s ease-out forwards;
+            white-space: nowrap; z-index: 50; font-size: 1.5rem;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1) rotate(var(--rot)); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1.2) rotate(var(--rot)); opacity: 0; }
+        }
+
+        /* --- Right Panel --- */
+        .right-panel {
+            width: 550px; background: var(--panel-bg); border-left: 2px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; z-index: 90; box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+
+        .tab-header {
+            display: flex; overflow-x: auto; background: rgba(0,0,0,0.4);
+            padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .tab-header::-webkit-scrollbar { height: 4px; }
+        .tab-header::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
+
+        .tab-btn {
+            flex: 0 0 auto; background: transparent; border: none; color: #aaa;
+            padding: 12px 18px; font-weight: 700; cursor: pointer;
+            border-bottom: 4px solid transparent; transition: 0.2s; font-size: 1rem; margin-right: 5px;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .tab-btn.active { color: white; border-bottom-color: var(--accent); background: rgba(255,255,255,0.1); border-radius: 8px 8px 0 0; }
+
+        /* --- Bulk Controls --- */
+        .bulk-controls {
+            padding: 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .bulk-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+        .bulk-label { font-size: 0.9rem; color: #ccc; font-weight: bold; }
+        
+        .bulk-btn-group { display: flex; gap: 5px; }
+        .bulk-btn {
+            background: #34495e; color: white; border: 1px solid #555;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.1s;
+        }
+        .bulk-btn:hover { background: #45627d; }
+        .bulk-btn.active { background: var(--btn-green); border-color: var(--btn-green-shadow); font-weight: bold; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+        
+        .bulk-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 6px; }
+        .bulk-input { width: 80px; background: rgba(0,0,0,0.5); border: 1px solid #555; color: white; padding: 6px; border-radius: 6px; text-align: center; font-weight: bold; }
+
+        .tab-content { flex: 1; overflow-y: auto; padding: 15px; display: none; }
+        .tab-content.active { display: block; }
+        .tab-content::-webkit-scrollbar { width: 8px; }
+        .tab-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        /* --- Items --- */
+        .item-card {
+            background: linear-gradient(to bottom, #ffffff, #ecf0f1);
+            color: #333; padding: 12px; border-radius: 14px; margin-bottom: 12px;
+            display: grid; grid-template-columns: 55px 1fr auto; align-items: center; gap: 15px;
+            border-bottom: 5px solid #bdc3c7; position: relative; transition: all 0.1s;
+        }
+        .item-card:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .item-card.locked-upgrade { filter: grayscale(1); opacity: 0.7; background: #95a5a6; pointer-events: none; }
+        .item-type-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; color: white; font-weight: bold; text-transform: uppercase; }
+        .badge-auto { background: #3498db; }
+        .badge-click { background: #e67e22; }
+        .badge-gold { background: #f1c40f; color: #333; }
+        .badge-diamond { background: #9b59b6; }
+        
+        .lock-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 5; background: rgba(0,0,0,0.1); border-radius: 14px;
+        }
+        .lock-badge {
+            background: #c0392b; color: white; padding: 5px 15px;
+            border-radius: 20px; font-weight: bold; font-size: 0.9rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4); border: 2px solid white; display: flex; align-items: center; gap: 5px;
+        }
+        .item-icon {
+            width: 55px; height: 55px; background: #eee; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid #ddd;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        .buy-btn {
+            background: var(--btn-green); color: white; border: none; padding: 8px 16px;
+            border-radius: 10px; font-weight: 700; cursor: pointer; border-bottom: 4px solid var(--btn-green-shadow);
+            min-width: 100px; font-size: 0.9rem; text-align: center; transition: 0.1s;
+        }
+        .buy-btn:disabled { background: #95a5a6; border-color: #7f8c8d; opacity: 0.8; cursor: not-allowed; transform: none; border-bottom-width: 4px; }
+        .buy-btn:active:not(:disabled) { transform: translateY(4px); border-bottom: 0; margin-bottom: 4px; }
+        .diamond-item { background: linear-gradient(to bottom, #e3f2fd, #bbdefb); border: 2px solid #2196f3; }
+        .diamond-btn { background: #2196f3; border-color: #1565c0; }
+
+        /* --- Inventory --- */
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; padding-bottom: 20px; }
+        .pet-slot {
+            aspect-ratio: 1; background: #333; border-radius: 10px; position: relative;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+            border: 2px solid #555; transition: transform 0.1s; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .pet-slot:hover { transform: scale(1.1); z-index: 2; }
+        .equipped-marker {
+            position: absolute; top: -5px; right: -5px; background: #2ecc71; border: 2px solid #fff;
+            width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        /* --- Rebirth Modal UI (IMPROVED) --- */
+        .rebirth-modal-center {
+            display: flex; flex-direction: column; align-items: center; width: 100%; color: #fff;
+        }
+        .progress-circle-container {
+            width: 220px; height: 220px; position: relative; display: flex; align-items: center; justify-content: center; margin: 25px 0;
+        }
+        .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .progress-circle-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 12; }
+        .progress-circle-fg { 
+            fill: none; stroke: #e056fd; stroke-width: 12; stroke-linecap: round; 
+            stroke-dasharray: 628; stroke-dashoffset: 628; transition: stroke-dashoffset 0.5s linear; 
+            filter: drop-shadow(0 0 5px #e056fd);
+        }
+        .progress-text { position: absolute; font-size: 2.5rem; font-weight: 900; color: white; text-shadow: 0 0 20px #e056fd; }
+        
+        .rebirth-info-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid #444;
+        }
+        .rebirth-info-col h3 { margin: 0 0 15px 0; font-size: 1.2rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .rebirth-list-item { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; text-align: left; }
+        .lost-item { color: #ff7675; }
+        .kept-item { color: #55efc4; }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .egg-modal-content {
+            background: #fff; color: #333; border-radius: 30px; border: 8px solid #333;
+            width: 95%; max-width: 600px; text-align: center; position: relative;
+            max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .egg-scroll-area { overflow-y: auto; flex: 1; padding-bottom: 20px; }
+        
+        .egg-modal-header { font-size: 1.8rem; font-weight: 900; margin-top: 25px; margin-bottom: 10px; color: #2d3436; text-transform: uppercase; }
+        .egg-image-large { font-size: 8rem; margin: 10px 0; animation: floatEgg 3s ease-in-out infinite; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); }
+        @keyframes floatEgg { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
+        
+        .egg-buy-section { background: #dfe6e9; padding: 20px; border-top: 3px solid #b2bec3; }
+        .amount-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .amt-btn {
+            background: #fff; border: 2px solid #bdc3c7; border-radius: 8px; padding: 8px; font-weight: 800; cursor: pointer; color: #555; transition: 0.1s;
+        }
+        .amt-btn:hover { background: #ecf0f1; }
+        .amt-btn.selected { background: #0984e3; color: white; border-color: #00cec9; box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3); }
+
+        .egg-actions-row { display: flex; gap: 10px; justify-content: center; }
+        .action-main-btn {
+            flex: 1; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; border: 3px solid rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;
+        }
+        .btn-buy-once { background: #2ecc71; color: white; border-color: #27ae60; }
+        .btn-buy-once:active { transform: translateY(2px); }
+        .btn-auto-hatch { background: #e67e22; color: white; border-color: #d35400; }
+        .btn-auto-hatch.active { background: #e74c3c; animation: pulseRed 1s infinite; border-color: #c0392b; }
+        @keyframes pulseRed { 0%{box-shadow:0 0 0 0 rgba(231, 76, 60, 0.7);} 70%{box-shadow:0 0 0 10px rgba(231, 76, 60, 0);} 100%{box-shadow:0 0 0 0 rgba(231, 76, 60, 0);} }
+
+        .cost-display { font-size: 1.1rem; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+
+        .close-btn {
+            position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white;
+            width: 40px; height: 40px; border-radius: 10px; font-size: 1.5rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            border: 3px solid #c0392b; z-index: 100;
+        }
+        @keyframes popIn { from{transform:scale(0.8); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+        /* Leaderboard */
+        .lb-container {
+            background: #fff; width: 90%; max-width: 600px; height: 80vh; border-radius: 15px;
+            display: flex; flex-direction: column; overflow: hidden; border: 5px solid #333; position:relative;
+        }
+        .lb-header { background: #333; color: white; padding: 15px; font-size: 1.5rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .lb-list { flex: 1; overflow-y: auto; background: #f5f5f5; }
+        .lb-row { display: flex; padding: 12px 15px; border-bottom: 1px solid #ddd; align-items: center; font-size: 1rem; color: #333; }
+        .lb-row.me { background: #ffeaa7; border-left: 6px solid #fdcb6e; font-weight: bold; }
+        .lb-rank { width: 60px; font-weight: bold; color: #555; }
+        .lb-name { flex: 1; }
+        .lb-score { font-family: monospace; font-weight: bold; font-size: 1.1rem; }
+        .lb-diff { font-size: 0.75rem; color: #e74c3c; margin-left: 10px; font-weight: bold; }
+        .lb-footer { padding: 15px; background: #eee; display: flex; justify-content: center; gap: 20px; align-items: center; border-top: 1px solid #ccc; }
+        
+        /* Sticky User Rank in Leaderboard */
+        #lb-sticky-footer {
+            background: #ffeaa7; border-top: 4px solid #fdcb6e; padding: 0;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10;
+        }
+        #lb-sticky-footer .lb-row { border-bottom: none; }
+
+        /* Hatch Anim */
+        .hatch-grid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; max-width: 800px; padding: 20px; }
+        .hatch-card {
+            width: 100px; height: 130px; background: white; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            animation: cardPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0; transform: scale(0.5); border: 4px solid transparent;
+        }
+        .hatch-card i { font-size: 2.5rem !important; margin-bottom: 5px; }
+        .hatch-name { font-weight: bold; font-size: 0.75rem; text-align:center; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:90%; color:#333; }
+        .hatch-rarity { font-size: 0.6rem; text-transform:uppercase; font-weight:bold; }
+        @keyframes cardPop { to { opacity:1; transform:scale(1); } }
+
+        /* Explanation Box in Settings */
+        .settings-info {
+            background: #f1f2f6; border: 1px solid #ccc; padding: 10px; border-radius: 10px; margin-top: 15px; font-size: 0.9rem; color: #333; text-align: left;
+        }
+        .settings-info h4 { margin: 5px 0; color: #2c3e50; }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 10px; }
+            .stat-card { padding: 10px; flex: 1; min-width: 140px; }
+            .main-area { min-height: 450px; padding: 20px 0; }
+            .right-panel { width: 100%; min-height: 600px; }
+            .click-zone { width: 260px; height: 260px; }
+            #click-btn { font-size: 5rem; }
+            .egg-modal-content { width: 95%; height:80vh; }
+            #active-buffs { bottom: 10px; left: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="notification-area"></div>
+
+    <div id="active-buffs"></div>
+
+    <div id="custom-tooltip">
+        <div class="tooltip-header" id="tt-title"></div>
+        <div class="tooltip-desc" id="tt-desc"></div>
+        <div id="tt-stats"></div>
+    </div>
+
+    <audio id="bgm-player" loop></audio>
+
+    <div class="sidebar">
+        <div class="stat-card" style="border-color: #f1c40f;">
+            <i class="bi bi-cursor-fill stat-icon" style="color: #f1c40f;"></i>
+            <div class="stat-info">
+                <span class="stat-label">クリック数</span>
+                <span class="stat-value" id="disp-clicks">0</span>
+            </div>
+        </div>
+        <div class="stat-card" style="border-color: #00d2ff;">
+            <i class="bi bi-gem-fill stat-icon" style="color: #00d2ff;"></i>
+            <div class="stat-info">
+                <span class="stat-label">ダイヤ</span>
+                <span class="stat-value" id="disp-gems">0</span>
+            </div>
+        </div>
+        
+        <div class="rebirth-stat-box">
+            <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">リバース回数</div>
+            <div class="rebirth-val" id="disp-rebirths">0</div>
+            <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-top:5px;">現在倍率</div>
+            <div class="rebirth-val" id="disp-rebirth-multi">x1.0</div>
+        </div>
+
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; width:100%;">
+            <button class="sidebar-btn" onclick="openModal('leaderboard-modal')">
+                <i class="bi bi-trophy-fill" style="color:#f1c40f;"></i> ランキング
+            </button>
+            <button class="sidebar-btn" onclick="openModal('settings-modal')">
+                <i class="bi bi-gear-fill" style="color:#bdc3c7;"></i> 設定
+            </button>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <div class="cps-container">
+            <div class="cps-badge"><i class="bi bi-lightning-charge-fill"></i> <span id="auto-cps">0</span> 自動/秒</div>
+            <div class="cps-badge"><i class="bi bi-hand-index-thumb-fill"></i> <span id="manual-cps">0</span> 手動/秒</div>
+        </div>
+
+        <div class="click-zone">
+            <button id="click-btn">
+                <i class="bi bi-cursor-fill"></i>
+            </button>
+        </div>
+        <div style="margin-top:30px; text-align:center; opacity:0.9;">
+            <div id="world-badge" style="font-size:1.3rem; font-weight:800; background:rgba(0,0,0,0.6); padding:10px 25px; border-radius:25px; border:2px solid rgba(255,255,255,0.2);">
+                <i class="bi bi-globe"></i> オーバーワールド
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="tab-header">
+            <button class="tab-btn active" onclick="switchTab('upgrades')"><i class="bi bi-arrow-up-circle"></i> 施設</button>
+            <button class="tab-btn" onclick="switchTab('eggs')"><i class="bi bi-egg-fill"></i> 卵</button>
+            <button class="tab-btn" onclick="switchTab('pets')"><i class="bi bi-backpack-fill"></i> ペット</button>
+            <button class="tab-btn" onclick="switchTab('shop')"><i class="bi bi-cart-fill"></i> ダイヤ店</button>
+            <button class="tab-btn" onclick="switchTab('worlds')"><i class="bi bi-globe"></i> ワールド</button>
+            <button class="tab-btn" onclick="switchTab('rebirth')"><i class="bi bi-arrow-repeat"></i> リバース</button>
+        </div>
+
+        <div class="bulk-controls">
+            <div class="bulk-row">
+                <div class="bulk-label">購入数: <span id="buy-amount-display" style="color:#2ecc71">1</span></div>
+                <div class="bulk-btn-group">
+                    <button class="bulk-btn active" onclick="setBuyMode(1)">1x</button>
+                    <button class="bulk-btn" onclick="setBuyMode(10)">10x</button>
+                    <button class="bulk-btn" onclick="setBuyMode(100)">100x</button>
+                    <button class="bulk-btn" onclick="setBuyMode('max')">MAX</button>
+                </div>
+            </div>
+            <div class="bulk-row">
+                <input type="range" class="bulk-slider" min="1" max="1000" value="1" oninput="updateBulkSlider(this.value)">
+                <input type="number" class="bulk-input" min="1" value="1" onchange="updateBulkInput(this.value)">
+            </div>
+        </div>
+
+        <div id="tab-upgrades" class="tab-content active"></div>
+        <div id="tab-eggs" class="tab-content"><div id="egg-list"></div></div>
+        <div id="tab-pets" class="tab-content">
+            <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span style="font-size:0.9rem;">装備中: <span id="equip-count">0</span>/5</span>
+                <span style="font-size:0.9rem; color:#bbb;">所持数: <span id="total-pet-count" style="color:white; font-weight:bold;">0</span>体</span>
+                <button class="buy-btn" style="min-width:auto; font-size:0.8rem; padding:6px 12px;" onclick="equipBest()">
+                    <i class="bi bi-lightning-fill"></i> 最強装備
+                </button>
+            </div>
+            <div id="inventory-container" class="inventory-grid"></div>
+        </div>
+        <div id="tab-shop" class="tab-content"></div>
+        <div id="tab-worlds" class="tab-content"></div>
+        
+        <div id="tab-rebirth" class="tab-content">
+            <div class="rebirth-container">
+                <h2 style="color:#f1c40f; text-shadow:0 0 10px #f1c40f;">REBIRTH</h2>
+                <p style="max-width:300px; color:#ccc;">リバースを行うと、進行状況をリセットして永続的な強さを手に入れます。</p>
+                <div class="rebirth-visual">
+                    <i class="bi bi-arrow-repeat" style="font-size:5rem; color:#9b59b6;"></i>
+                </div>
+                <button class="buy-btn" style="font-size:1.5rem; padding:15px 40px; background:#9b59b6; border-color:#8e44ad;" onclick="openModal('rebirth-modal')">
+                    リバース画面へ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="rebirth-modal" class="modal-overlay">
+        <div class="egg-modal-content" style="max-width:500px; background: #2d3436; color:white; border:none;">
+            <div class="close-btn" onclick="closeModal('rebirth-modal')">&times;</div>
+            <div class="egg-scroll-area" style="padding:20px;">
+                <h2 style="margin:0; color:#f1c40f; font-size:2rem; text-shadow:0 0 10px rgba(241, 196, 15, 0.5);">REBIRTH</h2>
+                
+                <div class="rebirth-modal-center">
+                    <div class="progress-circle-container">
+                        <svg class="progress-svg">
+                            <circle class="progress-circle-bg" cx="110" cy="110" r="100"></circle>
+                            <circle class="progress-circle-fg" id="rebirth-progress-circle" cx="110" cy="110" r="100"></circle>
+                        </svg>
+                        <div class="progress-text" id="rebirth-progress-text">0%</div>
+                    </div>
+                    <div style="font-size:1.3rem; font-weight:bold; margin-bottom:15px; background:rgba(0,0,0,0.5); padding:10px 20px; border-radius:50px;">
+                        コスト: <span id="rebirth-cost-final" style="color:#f1c40f;">1.00 M</span>
+                    </div>
+                    
+                    <div class="rebirth-info-grid">
+                        <div class="rebirth-info-col">
+                            <h3 class="lost-item"><i class="bi bi-x-circle-fill"></i> リセット対象</h3>
+                            <div class="rebirth-list-item lost-item">クリック数</div>
+                            <div class="rebirth-list-item lost-item">施設レベル</div>
+                            <div class="rebirth-list-item lost-item">ワールド進行</div>
+                        </div>
+                        <div class="rebirth-info-col">
+                            <h3 class="kept-item"><i class="bi bi-check-circle-fill"></i> 引き継ぎ</h3>
+                            <div class="rebirth-list-item kept-item">所持ペット</div>
+                            <div class="rebirth-list-item kept-item">ダイヤ残高</div>
+                            <div class="rebirth-list-item kept-item">ポーション</div>
+                            <div class="rebirth-list-item kept-item">ランキング</div>
+                            <div class="rebirth-list-item kept-item">実績データ</div>
+                        </div>
+                    </div>
+
+                    <div style="background:linear-gradient(90deg, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.4)); border:2px solid #2ecc71; padding:15px; border-radius:15px; margin-top:20px; width:100%; box-shadow:0 0 20px rgba(46, 204, 113, 0.3);">
+                        <div style="font-size:0.9rem; color:#badc58; margin-bottom:5px;">リバース報酬</div>
+                        <div style="font-weight:900; color:#fff; font-size:1.5rem; text-shadow:0 0 10px #2ecc71;" id="rebirth-reward-display">+100% 永続倍率</div>
+                    </div>
+                </div>
+
+                <button id="rebirth-execute-btn" class="buy-btn" style="width:100%; margin-top:25px; font-size:1.8rem; background:#9b59b6; border-color:#8e44ad; padding:15px; box-shadow:0 10px 0 #732d91;" onclick="doRebirth()">
+                    リバース実行！
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="egg-buy-modal" class="modal-overlay">
+        <div class="egg-modal-content">
+            <div class="close-btn" onclick="closeModal('egg-buy-modal')">&times;</div>
+            <div class="egg-scroll-area">
+                <div class="egg-modal-header">卵を購入</div>
+                <div class="egg-image-large"><i class="bi bi-egg-fill" style="color:#ffeaa7;"></i></div>
+                <div style="font-size:1.5rem; margin-bottom:10px; font-weight:bold; color:#555;" id="modal-egg-name">Egg Name</div>
+                
+                <div class="egg-buy-section">
+                    <div style="font-weight:bold; color:#555; margin-bottom:5px;">個数を選択:</div>
+                    <div class="amount-selector">
+                        <button class="amt-btn selected" onclick="selectEggAmount(1)">1</button>
+                        <button class="amt-btn" onclick="selectEggAmount(3)">3</button>
+                        <button class="amt-btn" onclick="selectEggAmount(5)">5</button>
+                        <button class="amt-btn" onclick="selectEggAmount(10)">10</button>
+                        <button class="amt-btn" onclick="selectEggAmount(25)">25</button>
+                        <button class="amt-btn" onclick="selectEggAmount(50)">50</button>
+                        <button class="amt-btn" onclick="selectEggAmount(100)">100</button>
+                        <button class="amt-btn" onclick="selectEggAmount('max')">MAX</button>
+                    </div>
+
+                    <div class="egg-actions-row">
+                        <button class="action-main-btn btn-buy-once" onclick="executeBuyEgg()">
+                            <div><i class="bi bi-cart-fill"></i> 購入</div>
+                            <div class="cost-display" id="egg-cost-disp"><i class="bi bi-mouse-fill"></i> 0</div>
+                        </button>
+                        <button class="action-main-btn btn-auto-hatch" id="btn-auto-hatch" onclick="toggleAutoHatch()">
+                            <i class="bi bi-arrow-repeat" style="font-size:1.5rem;"></i>
+                            <div>Auto Hatch</div>
+                            <div style="font-size:0.8rem;" id="auto-status-text">OFF</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hatch-modal" class="modal-overlay">
+        <div class="egg-modal-content" style="background:transparent; border:none; box-shadow:none; overflow:visible;">
+            <div style="text-align:center; width:100%;">
+                <h1 style="color:white; text-shadow:0 0 10px #000; margin-bottom:30px; font-size:3rem; font-weight:900;">GET!</h1>
+                <div class="egg-scroll-area" style="max-height:60vh; overflow-y:auto; padding:10px;">
+                    <div id="hatch-result-container" class="hatch-grid"></div>
+                </div>
+                <button class="buy-btn" style="margin-top:20px; font-size:1.5rem; padding:15px 50px;" onclick="closeHatchModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="egg-modal-content">
+            <div class="close-btn" onclick="closeModal('settings-modal')">&times;</div>
+            <div class="egg-scroll-area" style="padding:20px;">
+                <h2>設定</h2>
+                <div style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
+                    <button class="buy-btn" style="background:#3498db; border-color:#2980b9;" onclick="downloadSave()">
+                        <i class="bi bi-download"></i> データをダウンロード
+                    </button>
+                    <label class="buy-btn" style="background:#e67e22; border-color:#d35400; display:block; cursor:pointer;">
+                        <i class="bi bi-upload"></i> データをロード
+                        <input type="file" style="display:none;" onchange="uploadSave(this)">
+                    </label>
+                    <hr style="width:100%; border-color:#eee;">
+                    <button class="buy-btn" style="background:#e74c3c; border-color:#c0392b;" onclick="hardReset()">
+                        <i class="bi bi-trash-fill"></i> データ削除
+                    </button>
+                </div>
+                
+                <div class="settings-info">
+                    <h4>セーブデータについて</h4>
+                    <p>データはブラウザの<b>localStorage</b>に自動保存されます。ブラウザのキャッシュを削除すると消える可能性があります。</p>
+                    <p><b>ダウンロード</b>ボタンでバックアップを作成し、<b>ロード</b>でいつでも復元できます。</p>
+                    <hr>
+                    <h4>ランキングについて</h4>
+                    <p>このランキングはシミュレーション（架空のデータ）です。あなたの進行速度に合わせて周囲のプレイヤーの強さが自動調整され、リアルな競争を演出しています。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboard-modal" class="modal-overlay">
+        <div class="lb-container">
+            <div class="lb-header">
+                <span>グローバルランキング (Top 10,000)</span>
+                <i class="bi bi-x-lg" style="cursor:pointer;" onclick="closeModal('leaderboard-modal')"></i>
+            </div>
+            <div class="lb-list" id="lb-content"></div>
+            <!-- Sticky User Rank -->
+            <div id="lb-sticky-footer"></div>
+            
+            <div class="lb-footer">
+                <button class="buy-btn" onclick="changeLbPage(-1)">前へ</button>
+                <span id="lb-page-disp" style="font-weight:bold; color:#333;">1 / 100</span>
+                <button class="buy-btn" onclick="changeLbPage(1)">次へ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= CONFIGURATION ================= */
+        const GAME_VERSION = 2.6; 
+        const SUFFIXES = ["K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qg", "Uqg", "Dqg", "Tqg", "Qaqg", "Qiqg", "Sxqg", "Spqg", "Ocqg", "Noqg", "Qqg", "Uqqg", "Dqqg", "Tqqg", "Qaqqg", "Qiqqg", "Sxqqg", "Spqqg", "Ocqqg", "Noqqg", "Sg", "Usg", "Dsg", "Tsg", "Qasg", "Qisg", "Sxsg", "Spsg", "Ocsg", "Nosg", "Spg", "Uspg", "Dspg", "Tspg", "Qaspg", "Qispg", "Sxspg", "Spspg", "Ocspg", "Nospg", "Og", "Uog", "Dog", "Tog", "Qaog", "Qiog", "Sxog", "Spog", "Ocog", "Noog", "Ng", "Ung", "Dng", "Tng", "Qang", "Qing", "Sxng", "Spng", "Ocng", "Nong", "Ce", "Uce"];
+        
+        const RARITY_COLORS = {
+            "Basic": "#b2bec3",
+            "Rare": "#55efc4",
+            "Epic": "#0984e3",
+            "Legendary": "#fdcb6e",
+            "Mythical": "#d63031",
+            "Divine": "#e056fd",
+            "Exclusive": "#6c5ce7",
+            "Secret": "#000000",
+            "Taco": "#f1c40f",
+            "Potion": "#e84393",
+            "Godly": "#ff0055"
+        };
+
+        function formatNumber(num) {
+            if (num < 1000) return Math.floor(num).toString();
+            if (!isFinite(num)) return "Infinite";
+            let exponent = Math.floor(Math.log10(num));
+            let tier = Math.floor(exponent / 3);
+            if (tier === 0) return Math.floor(num).toString();
+            let suffixIndex = tier - 1;
+            if (suffixIndex < SUFFIXES.length) {
+                let suffix = SUFFIXES[suffixIndex];
+                let scale = Math.pow(10, tier * 3);
+                return (num / scale).toFixed(2) + suffix;
+            } else { return num.toExponential(2); }
+        }
+
+        function showNotification(msg, type) {
+            let area = document.getElementById('notification-area');
+            let el = document.createElement('div');
+            el.className = 'custom-notif';
+            let icon = type==='error' ? '<i class="bi bi-exclamation-triangle-fill" style="color:#e74c3c"></i>' : '<i class="bi bi-info-circle-fill" style="color:#3498db"></i>';
+            if(type==='success') icon = '<i class="bi bi-check-circle-fill" style="color:#2ecc71"></i>';
+            if(msg.includes('保存') || msg.includes('復元')) icon = '<i class="bi bi-floppy-fill" style="color:#2ecc71"></i>';
+            el.innerHTML = `${icon} <span>${msg}</span>`;
+            area.appendChild(el);
+            setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 3500);
+        }
+
+        /* ================= GAME DATA DEF ================= */
+        const WORLDS = [
+            { id: 0, name: "オーバーワールド", multi: 1, cost: 0, bg: "linear-gradient(135deg, #00c6ff, #0072ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
+            { id: 1, name: "キャンディランド", multi: 8, cost: 500000, bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
+            { id: 2, name: "溶岩の領域", multi: 50, cost: 100000000, bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 3, name: "宇宙空間", multi: 300, cost: 50000000000, bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
+            { id: 4, name: "タコスゾーン", multi: 1500, cost: 1e14, bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
+            { id: 5, name: "サイバーシティ", multi: 8000, cost: 1e15, bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
+            { id: 6, name: "アトランティス", multi: 50000, cost: 1e18, bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
+            { id: 7, name: "天国の門", multi: 250000, cost: 1e21, bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
+            { id: 8, name: "暗黒のダンジョン", multi: 1e6, cost: 1e30, bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
+            { id: 9, name: "銀河の核", multi: 1e7, cost: 1e45, bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
+            { id: 10, name: "虚無の次元", multi: 1e8, cost: 1e60, bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
+            { id: 11, name: "ネオン東京", multi: 1e9, cost: 1e80, bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
+            { id: 12, name: "スチームパンク", multi: 1e10, cost: 1e95, bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
+            { id: 13, name: "8ビット王国", multi: 1e11, cost: 1e110, bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 14, name: "ドラゴンの巣", multi: 1e12, cost: 1e130, bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
+            { id: 15, name: "忍の里", multi: 1e13, cost: 1e155, bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
+            { id: 16, name: "ゴールドラッシュ", multi: 1e14, cost: 1e180, bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
+            { id: 17, name: "お化け屋敷", multi: 1e15, cost: 1e210, bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
+            { id: 18, name: "氷結ツンドラ", multi: 1e16, cost: 1e240, bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
+            { id: 19, name: "砂漠の遺跡", multi: 1e17, cost: 1e275, bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
+            { id: 20, name: "アマゾンジャングル", multi: 1e18, cost: 1e300, bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
+            { id: 21, name: "ユートピア3000", multi: 1e19, cost: 1e305, bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 22, name: "ノワールシティ", multi: 1e20, cost: 1e308, bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
+            { id: 23, name: "グリッチマトリックス", multi: 1e22, cost: 1.7e308, bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" }
+        ];
+
+        const EGGS = [
+            { id: 0, name: "スターター卵", cost: 250, pets: [{ name: "イヌ", rarity: "Basic", chance: 0.6, power: 1.5 }, { name: "ネコ", rarity: "Basic", chance: 0.35, power: 2 }, { name: "ウサギ", rarity: "Rare", chance: 0.05, power: 5 }] },
+            { id: 1, name: "森の卵", cost: 15000, pets: [{ name: "クマ", rarity: "Rare", chance: 0.7, power: 15 }, { name: "キツネ", rarity: "Epic", chance: 0.25, power: 40 }, { name: "ドラゴン", rarity: "Legendary", chance: 0.05, power: 150 }] },
+            { id: 2, name: "マグマの卵", cost: 5000000, pets: [{ name: "インプ", rarity: "Epic", chance: 0.6, power: 300 }, { name: "ゴーレム", rarity: "Mythical", chance: 0.35, power: 800 }, { name: "フェニックス", rarity: "Divine", chance: 0.05, power: 5000 }] },
+            { id: 3, name: "虚無の卵", cost: 2e9, pets: [{ name: "エイリアン", rarity: "Mythical", chance: 0.7, power: 10000 }, { name: "UFO", rarity: "Divine", chance: 0.29, power: 30000 }, { name: "ブラックホール", rarity: "Exclusive", chance: 0.01, power: 200000 }] },
+            { id: 4, name: "タコスの卵", cost: 5e14, pets: [{ name: "タコス", rarity: "Legendary", chance: 0.8, power: 1e5 }, { name: "ブリトー", rarity: "Mythical", chance: 0.19, power: 5e5 }, { name: "ゴールデンタコス", rarity: "Exclusive", chance: 0.01, power: 2e6 }] },
+            { id: 5, name: "サイバー卵", cost: 1e16, pets: [{ name: "ロボット", rarity: "Legendary", chance: 0.8, power: 5e6 }, { name: "サイボーグ", rarity: "Mythical", chance: 0.19, power: 2e7 }, { name: "AIの神", rarity: "Exclusive", chance: 0.01, power: 1e8 }] },
+            { id: 6, name: "海の卵", cost: 1e20, pets: [{ name: "サメ", rarity: "Mythical", chance: 0.8, power: 1e9 }, { name: "クラーケン", rarity: "Divine", chance: 0.19, power: 5e9 }, { name: "リヴァイアサン", rarity: "Exclusive", chance: 0.01, power: 5e10 }] },
+            { id: 7, name: "天界の卵", cost: 1e30, pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 1e12 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 1e13 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 1e15 }] },
+            { id: 8, name: "悪魔の卵", cost: 1e35, pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e16 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 1e18 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e20 }] },
+            { id: 9, name: "銀河の卵", cost: 1e50, pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 1e24 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1e26 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 1e28 }] },
+            { id: 10, name: "次元の卵", cost: 1e65, pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 1e32 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 1e35 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 1e40 }] },
+            { id: 11, name: "ネオン卵", cost: 1e85, pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e45 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 1e50 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e55 }] },
+            { id: 12, name: "歯車の卵", cost: 1e100, pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 1e60 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1e65 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 1e70 }] },
+            { id: 13, name: "ドットの卵", cost: 1e120, pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 1e80 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 1e85 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 1e90 }] },
+            { id: 14, name: "竜の卵", cost: 1e150, pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e100 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 1e110 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e120 }] },
+            { id: 15, name: "黄金の卵", cost: 1e200, pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 1e140 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1e150 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 1e160 }] },
+            { id: 16, name: "氷の卵", cost: 1e250, pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 1e180 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 1e200 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 1e220 }] },
+            { id: 17, name: "未来の卵", cost: 1e300, pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e250 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 1e270 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e300 }] }
+        ];
+
+        const DIAMOND_SHOP = [
+            { id: 'speed_potion', name: 'スピードポーション', desc:'5分間クリック2倍', cost: 50, type: 'buff', duration: 300, icon:'bi-lightning-fill', rarity:'Potion' },
+            { id: 'luck_potion', name: 'ラックポーション', desc:'5分間ダイヤ出現率2倍', cost: 100, type: 'buff', duration: 300, icon:'bi-stars', rarity:'Potion' },
+            { id: 'crit_potion', name: '会心ポーション', desc:'5分間クリティカル率2倍', cost: 150, type: 'buff', duration: 300, icon:'bi-bullseye', rarity:'Potion' },
+            { id: 'gold_potion', name: 'ゴールドポーション', desc:'5分間ゴールド獲得2倍', cost: 200, type: 'buff', duration: 300, icon:'bi-coin', rarity:'Potion' },
+            { id: 'click_frenzy', name: 'クリックフレンジー', desc:'3分間クリックパワー5倍', cost: 500, type: 'buff', duration: 180, icon:'bi-cursor-fill', rarity:'Epic' },
+            { id: 'ultra_luck', name: 'ウルトララック', desc:'3分間ダイヤ出現率5倍', cost: 750, type: 'buff', duration: 180, icon:'bi-gem', rarity:'Legendary' },
+            { id: 'mega_potion', name: 'メガポーション', desc:'2分間 全ステータス3倍', cost: 1500, type: 'buff', duration: 120, icon:'bi-fire', rarity:'Godly' },
+            { id: 'exclusive_egg', name: 'Exclusive Egg', desc:'限定ペット確定 (1e10倍)', cost: 5000, type: 'pet', power: 1e10, rarity:'Exclusive', icon:'bi-egg-fill' },
+            { id: 'secret_egg', name: 'Secret Egg', desc:'？？？ (1e15倍)', cost: 25000, type: 'pet', power: 1e15, rarity:'Secret', icon:'bi-question-circle-fill' }
+        ];
+
+        /* ================= 100 UNIQUE UPGRADES ================= */
+        const BUILDING_TYPES = [
+            // World 0: Overworld
+            { id: 'u01', name: '木のカーソル', type: 'click', baseP: 1, baseC: 15, icon: 'bi-cursor', desc: 'クリックパワー +1', worldReq: 0 },
+            { id: 'u02', name: 'グランマ', type: 'auto', baseP: 5, baseC: 100, icon: 'bi-person-standing-dress', desc: '自動クリック +5', worldReq: 0 },
+            { id: 'u03', name: '農場', type: 'auto', baseP: 20, baseC: 1100, icon: 'bi-flower1', desc: '自動クリック +20', worldReq: 0 },
+            { id: 'u04', name: '宝石磨き', type: 'diamond', baseP: 0.1, baseC: 5000, icon: 'bi-gem', desc: 'ダイヤ出現率 +10%', worldReq: 0 },
+            
+            // World 1: Candy Land
+            { id: 'u05', name: '工場', type: 'auto', baseP: 200, baseC: 130000, icon: 'bi-buildings-fill', desc: '自動クリック +200', worldReq: 1 },
+            { id: 'u06', name: '砂糖のマウス', type: 'click', baseP: 100, baseC: 250000, icon: 'bi-mouse-fill', desc: 'クリックパワー +100', worldReq: 1 },
+            { id: 'u07', name: '銀のコイン', type: 'gold', baseP: 0.2, baseC: 500000, icon: 'bi-piggy-bank', desc: 'ゴールド倍率 +20%', worldReq: 1 },
+            { id: 'u08', name: 'お菓子オーブン', type: 'auto', baseP: 1000, baseC: 1.4e6, icon: 'bi-fire', desc: '自動クリック +1k', worldReq: 1 },
+
+            // World 2: Lava Realm
+            { id: 'u09', name: '寺院', type: 'auto', baseP: 5000, baseC: 20e6, icon: 'bi-bank', desc: '自動クリック +5k', worldReq: 2 },
+            { id: 'u10', name: '黒曜石マウス', type: 'click', baseP: 2000, baseC: 50e6, icon: 'bi-square-fill', desc: 'クリックパワー +2k', worldReq: 2 },
+            { id: 'u11', name: '魔法使いの塔', type: 'auto', baseP: 20000, baseC: 330e6, icon: 'bi-stars', desc: '自動クリック +20k', worldReq: 2 },
+            { id: 'u12', name: '金の延べ棒', type: 'gold', baseP: 0.5, baseC: 800e6, icon: 'bi-cash-coin', desc: 'ゴールド倍率 +50%', worldReq: 2 },
+
+            // World 3: Space Void
+            { id: 'u13', name: '宇宙船', type: 'auto', baseP: 200000, baseC: 50e9, icon: 'bi-rocket-takeoff', desc: '自動クリック +200k', worldReq: 3 },
+            { id: 'u14', name: 'スペースマウス', type: 'click', baseP: 100000, baseC: 150e9, icon: 'bi-moon-stars', desc: 'クリックパワー +100k', worldReq: 3 },
+            { id: 'u15', name: '錬金術ラボ', type: 'auto', baseP: 1e6, baseC: 500e9, icon: 'bi-flask', desc: '自動クリック +1M', worldReq: 3 },
+            { id: 'u16', name: 'メテオマイナー', type: 'diamond', baseP: 1.0, baseC: 2e12, icon: 'bi-hammer', desc: 'ダイヤ獲得量 x2', worldReq: 3 },
+
+            // World 4: Taco Zone
+            { id: 'u17', name: 'ポータル', type: 'auto', baseP: 5e6, baseC: 15e12, icon: 'bi-bullseye', desc: '自動クリック +5M', worldReq: 4 },
+            { id: 'u18', name: '金のタコス', type: 'gold', baseP: 1.0, baseC: 50e12, icon: 'bi-triangle-fill', desc: 'ゴールド倍率 +100%', worldReq: 4 },
+            { id: 'u19', name: 'タイムマシン', type: 'auto', baseP: 20e6, baseC: 250e12, icon: 'bi-hourglass-split', desc: '自動クリック +20M', worldReq: 4 },
+            { id: 'u20', name: 'サルサカーソル', type: 'click', baseP: 10e6, baseC: 1e15, icon: 'bi-droplet-fill', desc: 'クリックパワー +10M', worldReq: 4 },
+
+            // World 5: Cyber City
+            { id: 'u21', name: '反物質凝縮器', type: 'auto', baseP: 200e6, baseC: 200e15, icon: 'bi-radioactive', desc: '自動クリック +200M', worldReq: 5 },
+            { id: 'u22', name: 'レーザーポインタ', type: 'click', baseP: 100e6, baseC: 1e18, icon: 'bi-pen-fill', desc: 'クリックパワー +100M', worldReq: 5 },
+            { id: 'u23', name: 'プリズム', type: 'auto', baseP: 1e9, baseC: 5e18, icon: 'bi-gem', desc: '自動クリック +1B', worldReq: 5 },
+            { id: 'u24', name: 'ビットコイン採掘', type: 'gold', baseP: 2.0, baseC: 25e18, icon: 'bi-currency-bitcoin', desc: 'ゴールド倍率 +200%', worldReq: 5 },
+
+            // World 6: Atlantis
+            { id: 'u25', name: 'チャンセリー', type: 'auto', baseP: 10e9, baseC: 2e21, icon: 'bi-building', desc: '自動クリック +10B', worldReq: 6 },
+            { id: 'u26', name: 'トライデント', type: 'click', baseP: 5e9, baseC: 10e21, icon: 'bi-tsunami', desc: 'クリックパワー +5B', worldReq: 6 },
+            { id: 'u27', name: 'パールダイバー', type: 'diamond', baseP: 2.0, baseC: 50e21, icon: 'bi-water', desc: 'ダイヤ獲得量 x3', worldReq: 6 },
+            { id: 'u28', name: '水素発電機', type: 'auto', baseP: 50e9, baseC: 200e21, icon: 'bi-fan', desc: '自動クリック +50B', worldReq: 6 },
+
+            // World 7: Heaven Gates
+            { id: 'u29', name: 'フラクタルエンジン', type: 'auto', baseP: 500e9, baseC: 15e24, icon: 'bi-grid-3x3', desc: '自動クリック +500B', worldReq: 7 },
+            { id: 'u30', name: '天使の輪', type: 'gold', baseP: 5.0, baseC: 60e24, icon: 'bi-brightness-high', desc: 'ゴールド倍率 +500%', worldReq: 7 },
+            { id: 'u31', name: '天使の羽', type: 'click', baseP: 200e9, baseC: 250e24, icon: 'bi-feather', desc: 'クリックパワー +200B', worldReq: 7 },
+            { id: 'u32', name: '雲の宮殿', type: 'auto', baseP: 5e12, baseC: 1e27, icon: 'bi-cloud', desc: '自動クリック +5T', worldReq: 7 },
+
+            // World 8: ***** Dungeon
+            { id: 'u33', name: 'JSコンソール', type: 'auto', baseP: 50e12, baseC: 100e27, icon: 'bi-code-square', desc: '自動クリック +50T', worldReq: 8 },
+            { id: 'u34', name: '悪魔の爪', type: 'click', baseP: 20e12, baseC: 500e27, icon: 'bi-hand-index-thumb', desc: 'クリックパワー +20T', worldReq: 8 },
+            { id: 'u35', name: '地獄の穴', type: 'auto', baseP: 200e12, baseC: 2e30, icon: 'bi-fire', desc: '自動クリック +200T', worldReq: 8 },
+            { id: 'u36', name: '悪魔の契約', type: 'gold', baseP: 10.0, baseC: 10e30, icon: 'bi-file-text', desc: 'ゴールド倍率 +1000%', worldReq: 8 },
+
+            // World 9: Galactic Core
+            { id: 'u37', name: '皮質ベイカー', type: 'auto', baseP: 2e15, baseC: 1e33, icon: 'bi-cpu', desc: '自動クリック +2Qa', worldReq: 9 },
+            { id: 'u38', name: 'プラズマガン', type: 'click', baseP: 1e15, baseC: 5e33, icon: 'bi-align-center', desc: 'クリックパワー +1Qa', worldReq: 9 },
+            { id: 'u39', name: 'スターフォージ', type: 'diamond', baseP: 10.0, baseC: 25e33, icon: 'bi-hammer', desc: 'ダイヤ獲得量 x11', worldReq: 9 },
+            { id: 'u40', name: 'ブラックホール', type: 'auto', baseP: 10e15, baseC: 100e33, icon: 'bi-vinyl', desc: '自動クリック +10Qa', worldReq: 9 },
+
+            // World 10: Void Dimension
+            { id: 'u41', name: 'ヴォイドウォーカー', type: 'auto', baseP: 100e15, baseC: 10e36, icon: 'bi-person-walking', desc: '自動クリック +100Qa', worldReq: 10 },
+            { id: 'u42', name: 'Nullポインタ', type: 'click', baseP: 50e15, baseC: 50e36, icon: 'bi-slash-circle', desc: 'クリックパワー +50Qa', worldReq: 10 },
+            { id: 'u43', name: '虚無の宝箱', type: 'gold', baseP: 20.0, baseC: 200e36, icon: 'bi-box-seam', desc: 'ゴールド倍率 +2000%', worldReq: 10 },
+            { id: 'u44', name: 'リアリティエンジン', type: 'auto', baseP: 500e15, baseC: 1e39, icon: 'bi-gear-wide-connected', desc: '自動クリック +500Qa', worldReq: 10 },
+
+            // World 11: Neon Tokyo
+            { id: 'u45', name: 'ネオン広告', type: 'auto', baseP: 20e18, baseC: 100e39, icon: 'bi-badge-ad', desc: '自動クリック +20Qi', worldReq: 11 },
+            { id: 'u46', name: 'サイバー刀', type: 'click', baseP: 10e18, baseC: 500e39, icon: 'bi-scissors', desc: 'クリックパワー +10Qi', worldReq: 11 },
+            { id: 'u47', name: '仮想通貨銀行', type: 'diamond', baseP: 20.0, baseC: 2e42, icon: 'bi-currency-exchange', desc: 'ダイヤ獲得量 x21', worldReq: 11 },
+            { id: 'u48', name: 'ホロアイドル', type: 'auto', baseP: 100e18, baseC: 10e42, icon: 'bi-person-video', desc: '自動クリック +100Qi', worldReq: 11 },
+
+            // World 12: Steampunk
+            { id: 'u49', name: '蒸気機関', type: 'auto', baseP: 2e21, baseC: 5e45, icon: 'bi-gear-wide', desc: '自動クリック +2Sx', worldReq: 12 },
+            { id: 'u50', name: '真鍮のゴーグル', type: 'click', baseP: 1e21, baseC: 2e46, icon: 'bi-eyeglasses', desc: 'クリックパワー +1Sx', worldReq: 12 },
+            { id: 'u51', name: 'クロックワーク', type: 'auto', baseP: 10e21, baseC: 1e47, icon: 'bi-clock-history', desc: '自動クリック +10Sx', worldReq: 12 },
+            { id: 'u52', name: 'スチームドリル', type: 'diamond', baseP: 25.0, baseC: 5e47, icon: 'bi-hammer', desc: 'ダイヤ獲得量 x26', worldReq: 12 },
+
+            // World 13: 8-bit
+            { id: 'u53', name: 'ドット絵勇者', type: 'auto', baseP: 50e21, baseC: 1e50, icon: 'bi-controller', desc: '自動クリック +50Sx', worldReq: 13 },
+            { id: 'u54', name: 'ピクセル剣', type: 'click', baseP: 20e21, baseC: 5e50, icon: 'bi-shield-shaded', desc: 'クリックパワー +20Sx', worldReq: 13 },
+            { id: 'u55', name: 'グリッチ発生装置', type: 'auto', baseP: 200e21, baseC: 2e51, icon: 'bi-bug-fill', desc: '自動クリック +200Sx', worldReq: 13 },
+            { id: 'u56', name: 'チートコード', type: 'gold', baseP: 50.0, baseC: 1e52, icon: 'bi-code-slash', desc: 'ゴールド倍率 +5000%', worldReq: 13 },
+
+            // World 14: Dragon's Nest
+            { id: 'u57', name: 'ドラゴンの鱗', type: 'auto', baseP: 1e24, baseC: 1e55, icon: 'bi-shield-fill', desc: '自動クリック +1Sp', worldReq: 14 },
+            { id: 'u58', name: '炎の息吹', type: 'click', baseP: 500e21, baseC: 5e55, icon: 'bi-fire', desc: 'クリックパワー +500Sx', worldReq: 14 },
+            { id: 'u59', name: 'ワイバーンの巣', type: 'auto', baseP: 5e24, baseC: 2e56, icon: 'bi-egg', desc: '自動クリック +5Sp', worldReq: 14 },
+            { id: 'u60', name: '宝の守り手', type: 'diamond', baseP: 50.0, baseC: 1e57, icon: 'bi-safe', desc: 'ダイヤ獲得量 x51', worldReq: 14 },
+
+            // World 15: Ninja Village
+            { id: 'u61', name: '手裏剣工場', type: 'auto', baseP: 20e24, baseC: 1e60, icon: 'bi-star', desc: '自動クリック +20Sp', worldReq: 15 },
+            { id: 'u62', name: '苦無', type: 'click', baseP: 10e24, baseC: 5e60, icon: 'bi-caret-up', desc: 'クリックパワー +10Sp', worldReq: 15 },
+            { id: 'u63', name: '影分身の術', type: 'auto', baseP: 100e24, baseC: 2e61, icon: 'bi-people-fill', desc: '自動クリック +100Sp', worldReq: 15 },
+            { id: 'u64', name: '忍びの極意', type: 'gold', baseP: 100.0, baseC: 1e62, icon: 'bi-moon', desc: 'ゴールド倍率 +10000%', worldReq: 15 },
+
+            // World 16: Gold Rush
+            { id: 'u65', name: '巨大ツルハシ', type: 'auto', baseP: 500e24, baseC: 1e65, icon: 'bi-hammer', desc: '自動クリック +500Sp', worldReq: 16 },
+            { id: 'u66', name: '選鉱鍋', type: 'click', baseP: 200e24, baseC: 5e65, icon: 'bi-circle', desc: 'クリックパワー +200Sp', worldReq: 16 },
+            { id: 'u67', name: '造幣局', type: 'auto', baseP: 2e27, baseC: 2e66, icon: 'bi-cash-stack', desc: '自動クリック +2Oc', worldReq: 16 },
+            { id: 'u68', name: '銀行強盗', type: 'diamond', baseP: 100.0, baseC: 1e67, icon: 'bi-mask', desc: 'ダイヤ獲得量 x101', worldReq: 16 },
+
+            // World 17: Haunted House
+            { id: 'u69', name: 'エクトプラズム', type: 'auto', baseP: 10e27, baseC: 1e70, icon: 'bi-droplet-half', desc: '自動クリック +10Oc', worldReq: 17 },
+            { id: 'u70', name: 'ウィジャ盤', type: 'click', baseP: 5e27, baseC: 5e70, icon: 'bi-ui-checks', desc: 'クリックパワー +5Oc', worldReq: 17 },
+            { id: 'u71', name: 'ポルターガイスト', type: 'auto', baseP: 50e27, baseC: 2e71, icon: 'bi-lamp', desc: '自動クリック +50Oc', worldReq: 17 },
+            { id: 'u72', name: '呪われた人形', type: 'gold', baseP: 200.0, baseC: 1e72, icon: 'bi-emoji-dizzy', desc: 'ゴールド倍率 +20000%', worldReq: 17 },
+
+            // World 18: Ice Tundra
+            { id: 'u73', name: '氷柱', type: 'auto', baseP: 200e27, baseC: 1e75, icon: 'bi-caret-down-fill', desc: '自動クリック +200Oc', worldReq: 18 },
+            { id: 'u74', name: 'イグルー村', type: 'click', baseP: 100e27, baseC: 5e75, icon: 'bi-house-door', desc: 'クリックパワー +100Oc', worldReq: 18 },
+            { id: 'u75', name: '冷凍睡眠装置', type: 'auto', baseP: 1e30, baseC: 2e76, icon: 'bi-box', desc: '自動クリック +1No', worldReq: 18 },
+            { id: 'u76', name: 'イエティの毛皮', type: 'diamond', baseP: 500.0, baseC: 1e77, icon: 'bi-snow', desc: 'ダイヤ獲得量 x501', worldReq: 18 },
+
+            // World 19: Desert Ruins
+            { id: 'u77', name: '砂のシャベル', type: 'auto', baseP: 5e30, baseC: 1e80, icon: 'bi-recycle', desc: '自動クリック +5No', worldReq: 19 },
+            { id: 'u78', name: 'ピラミッドパワー', type: 'click', baseP: 2e30, baseC: 5e80, icon: 'bi-triangle', desc: 'クリックパワー +2No', worldReq: 19 },
+            { id: 'u79', name: 'スフィンクス', type: 'auto', baseP: 20e30, baseC: 2e81, icon: 'bi-patch-question', desc: '自動クリック +20No', worldReq: 19 },
+            { id: 'u80', name: 'オアシス', type: 'gold', baseP: 500.0, baseC: 1e82, icon: 'bi-water', desc: 'ゴールド倍率 +50000%', worldReq: 19 },
+
+            // World 20: Amazon
+            { id: 'u81', name: 'マチェーテ', type: 'auto', baseP: 100e30, baseC: 1e85, icon: 'bi-scissors', desc: '自動クリック +100No', worldReq: 20 },
+            { id: 'u82', name: 'ツリーハウス', type: 'click', baseP: 50e30, baseC: 5e85, icon: 'bi-tree', desc: 'クリックパワー +50No', worldReq: 20 },
+            { id: 'u83', name: '古代遺跡', type: 'auto', baseP: 500e30, baseC: 2e86, icon: 'bi-bank2', desc: '自動クリック +500No', worldReq: 20 },
+            { id: 'u84', name: 'ジャングルの秘宝', type: 'diamond', baseP: 1000.0, baseC: 1e87, icon: 'bi-gem', desc: 'ダイヤ獲得量 x1001', worldReq: 20 },
+
+            // World 21: Utopia
+            { id: 'u85', name: 'ホバーボード', type: 'auto', baseP: 2e33, baseC: 1e90, icon: 'bi-hdd', desc: '自動クリック +2Dc', worldReq: 21 },
+            { id: 'u86', name: 'ナノボット', type: 'click', baseP: 1e33, baseC: 5e90, icon: 'bi-robot', desc: 'クリックパワー +1Dc', worldReq: 21 },
+            { id: 'u87', name: '核融合炉', type: 'auto', baseP: 10e33, baseC: 2e91, icon: 'bi-radioactive', desc: '自動クリック +10Dc', worldReq: 21 },
+            { id: 'u88', name: '空中都市', type: 'gold', baseP: 1000.0, baseC: 1e92, icon: 'bi-clouds', desc: 'ゴールド倍率 +100000%', worldReq: 21 },
+
+            // World 22: Noir City
+            { id: 'u89', name: '探偵バッジ', type: 'auto', baseP: 50e33, baseC: 1e95, icon: 'bi-shield-check', desc: '自動クリック +50Dc', worldReq: 22 },
+            { id: 'u90', name: 'タイプライター', type: 'click', baseP: 20e33, baseC: 5e95, icon: 'bi-keyboard', desc: 'クリックパワー +20Dc', worldReq: 22 },
+            { id: 'u91', name: 'ジャズクラブ', type: 'auto', baseP: 200e33, baseC: 2e96, icon: 'bi-music-note', desc: '自動クリック +200Dc', worldReq: 22 },
+            { id: 'u92', name: '街灯', type: 'diamond', baseP: 2000.0, baseC: 1e97, icon: 'bi-lightbulb', desc: 'ダイヤ獲得量 x2001', worldReq: 22 },
+
+            // World 23: Glitch Matrix
+            { id: 'u93', name: '赤い薬', type: 'auto', baseP: 1e36, baseC: 1e100, icon: 'bi-capsule', desc: '自動クリック +1Ud', worldReq: 23 },
+            { id: 'u94', name: 'コードの雨', type: 'click', baseP: 500e33, baseC: 5e100, icon: 'bi-code', desc: 'クリックパワー +500Dc', worldReq: 23 },
+            { id: 'u95', name: 'アーキテクト', type: 'auto', baseP: 5e36, baseC: 2e101, icon: 'bi-person-badge', desc: '自動クリック +5Ud', worldReq: 23 },
+            { id: 'u96', name: 'システムコア', type: 'gold', baseP: 5000.0, baseC: 1e102, icon: 'bi-cpu-fill', desc: 'ゴールド倍率 +500000%', worldReq: 23 },
+
+            // Endgame
+            { id: 'u97', name: '量子クリッカー', type: 'click', baseP: 20e36, baseC: 1e105, icon: 'bi-mouse2', desc: 'クリックパワー +20Ud', worldReq: 23 },
+            { id: 'u98', name: '多元宇宙エンジン', type: 'auto', baseP: 50e36, baseC: 1e110, icon: 'bi-globe2', desc: '自動クリック +50Ud', worldReq: 23 },
+            { id: 'u99', name: '時の紡ぎ手', type: 'auto', baseP: 500e36, baseC: 1e115, icon: 'bi-hourglass-bottom', desc: '自動クリック +500Ud', worldReq: 23 },
+            { id: 'u100', name: 'オムニツール', type: 'diamond', baseP: 10000.0, baseC: 1e120, icon: 'bi-tools', desc: 'ダイヤ獲得量 x10001', worldReq: 23 }
+        ];
+
+        /* ================= GAME STATE & LOGIC ================= */
+        let game = {
+            version: GAME_VERSION,
+            clicks: 0, 
+            gems: 0,
+            rebirths: 0,
+            world: 0,
+            buildings: {}, 
+            inventory: [],
+            buffs: {},
+            startTime: Date.now()
+        };
+
+        let buyMode = 1;
+        let eggBuyAmount = 1;
+        let autoHatchEnabled = false;
+        let autoHatchTimer = null;
+        let audioPlayer = document.getElementById('bgm-player');
+        let leaderboardData = []; 
+        let lbPage = 1;
+        let currentEgg = null;
+        
+        let cachedAutoCPS = 0;
+        let cachedClickPower = 1;
+        let cachedGoldMulti = 1;
+        let cachedDiamondMulti = 1;
+        let cachedDiamondChance = 0.001;
+        let cachedCritChance = 0.01;
+        let manualClickHistory = [];
+
+        window.onload = function() { initGame(); };
+
+        function initGame() {
+            loadGame(); 
+            recalcStats();
+            initLeaderboard();
+            renderUpgrades(); renderEggs(); renderShop(); renderWorlds(); renderInventory();
+            
+            setInterval(gameLoop, 100); 
+            setInterval(saveGame, 15000); 
+            setInterval(updateLeaderboard, 1000); 
+            
+            document.body.addEventListener('click', () => { if(audioPlayer.paused && audioPlayer.src) audioPlayer.play().catch(()=>{}); }, {once:true});
+            changeWorld(game.world, true);
+        }
+
+        function gameLoop() {
+            if(cachedAutoCPS > 0) game.clicks += cachedAutoCPS / 10;
+            let buffChanged = false;
+            for(let key in game.buffs) {
+                if(game.buffs[key] > 0) {
+                    game.buffs[key] -= 0.1;
+                } else {
+                    delete game.buffs[key];
+                    buffChanged = true;
+                }
+            }
+            if(buffChanged) recalcStats();
+            let now = Date.now();
+            manualClickHistory = manualClickHistory.filter(t => now - t < 1000);
+            updateUI(cachedAutoCPS, manualClickHistory.length);
+        }
+
+        /* --- CALCULATIONS --- */
+        function recalcStats() {
+            let totalAuto = 0;
+            let totalClick = 1;
+            let goldMulti = 1;
+            let diamondMulti = 1;
+            let diamondChance = 0.001; 
+            let critChance = 0.01;
+            let m = getTotalMulti();
+
+            BUILDING_TYPES.forEach(b => {
+                let lvl = game.buildings[b.id] || 0;
+                if(lvl > 0) {
+                    if(b.type === 'click') { totalClick += (b.baseP * lvl); } 
+                    else if (b.type === 'auto') { totalAuto += (b.baseP * lvl); } 
+                    else if (b.type === 'gold') { goldMulti += (b.baseP * lvl); } 
+                    else if (b.type === 'diamond') {
+                        if(b.desc.includes('率')) diamondChance *= (1 + (b.baseP * lvl));
+                        else diamondMulti += (b.baseP * lvl);
+                    }
+                }
+            });
+            
+            if(game.buffs['speed_potion']) totalClick *= 2;
+            if(game.buffs['luck_potion']) diamondChance *= 2;
+            if(game.buffs['crit_potion']) critChance *= 2;
+            if(game.buffs['gold_potion']) goldMulti *= 2;
+            
+            // New Potions Logic
+            if(game.buffs['click_frenzy']) totalClick *= 5;
+            if(game.buffs['ultra_luck']) diamondChance *= 5;
+            if(game.buffs['mega_potion']) {
+                totalClick *= 3;
+                totalAuto *= 3;
+                goldMulti *= 3;
+                diamondMulti *= 3;
+                diamondChance *= 3;
+            }
+
+            cachedAutoCPS = totalAuto * m * goldMulti; 
+            cachedClickPower = totalClick * m * goldMulti;
+            cachedGoldMulti = goldMulti;
+            cachedDiamondMulti = diamondMulti;
+            cachedDiamondChance = diamondChance;
+            cachedCritChance = critChance;
+            
+            updateBuffDisplay();
+        }
+
+        function getTotalMulti() {
+            let m = WORLDS[game.world].multi;
+            let pMulti = 1;
+            let equipped = game.inventory.filter(p => p.equipped).sort((a,b)=>b.power-a.power).slice(0,5);
+            equipped.forEach(p => pMulti += p.power);
+            let rMulti = 1 + game.rebirths; // Rebirth adds +100% additive, effectively x(1+rebirths)
+            return m * pMulti * rMulti;
+        }
+
+        /* --- BULK COST --- */
+        function getSingleCost(bObj, currentLvl) { return Math.floor(bObj.baseC * Math.pow(1.15, currentLvl)); }
+        function getBulkCost(bObj, startLvl, count) {
+            let r = 1.15;
+            let a = bObj.baseC * Math.pow(r, startLvl);
+            if (r === 1) return a * count;
+            return Math.floor(a * (Math.pow(r, count) - 1) / (r - 1));
+        }
+        function getMaxBuyable(bObj, startLvl, money) {
+            let r = 1.15;
+            let a = bObj.baseC * Math.pow(r, startLvl);
+            if (money < a) return 0;
+            let n = Math.log(1 + (money * (r - 1) / a)) / Math.log(r);
+            return Math.floor(n);
+        }
+        function setBuyMode(val) {
+            buyMode = val;
+            document.querySelectorAll('.bulk-btn').forEach(b => b.classList.remove('active'));
+            if(val===1) document.querySelectorAll('.bulk-btn')[0].classList.add('active');
+            else if(val===10) document.querySelectorAll('.bulk-btn')[1].classList.add('active');
+            else if(val===100) document.querySelectorAll('.bulk-btn')[2].classList.add('active');
+            else document.querySelectorAll('.bulk-btn')[3].classList.add('active');
+            document.getElementById('buy-amount-display').innerText = val === 'max' ? "MAX" : val;
+            if(val !== 'max') {
+                document.querySelector('.bulk-slider').value = val;
+                document.querySelector('.bulk-input').value = val;
+            }
+            renderUpgrades(); 
+        }
+        function updateBulkSlider(val) { setBuyMode(parseInt(val)); }
+        function updateBulkInput(val) { let v = parseInt(val); if(v<1)v=1; setBuyMode(v); }
+
+        /* --- INTERACTION --- */
+        document.getElementById('click-btn').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            manualClickHistory.push(Date.now());
+            let power = cachedClickPower;
+            let isCrit = Math.random() < cachedCritChance;
+            if(isCrit) power *= 2;
+            game.clicks += power;
+            spawnText(e.clientX, e.clientY, `+${formatNumber(power)}`, isCrit);
+            
+            let dropCount = 0;
+            if(cachedDiamondChance <= 1) {
+                if(Math.random() < cachedDiamondChance) dropCount = 1;
+            } else {
+                dropCount = Math.floor(cachedDiamondChance);
+                if(Math.random() < (cachedDiamondChance % 1)) dropCount++;
+            }
+            
+            if(dropCount > 0) {
+                let gemGain = dropCount * cachedDiamondMulti;
+                game.gems += gemGain;
+                spawnText(e.clientX, e.clientY - 60, `+${formatNumber(gemGain)} ダイヤ!`, false, "#00d2ff");
+            }
+            
+            let btn = document.getElementById('click-btn');
+            btn.style.transform = "scale(0.95)";
+            setTimeout(() => btn.style.transform = "scale(1)", 50);
+            updateUI(cachedAutoCPS, manualClickHistory.length);
+        });
+
+        function spawnText(x, y, txt, crit, col) {
+            let el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = txt + (crit?"!":"");
+            el.style.color = col ? col : (crit ? "#f1c40f" : "white");
+            if(crit || col) el.style.fontSize = "2rem";
+            if(col) el.style.textShadow = `0 0 10px ${col}`;
+            let rx = (Math.random()*40)-20;
+            el.style.left = (x+rx)+"px"; el.style.top = y+"px";
+            el.style.setProperty('--rot', (Math.random()*20-10)+'deg');
+            document.body.appendChild(el);
+            setTimeout(()=>el.remove(), 800);
+        }
+
+        /* --- UI UPDATER --- */
+        function updateUI(autoCPS, manualCPS) {
+            document.getElementById('disp-clicks').innerText = formatNumber(game.clicks);
+            document.getElementById('disp-gems').innerText = formatNumber(game.gems);
+            document.getElementById('disp-rebirths').innerText = game.rebirths;
+            document.getElementById('disp-rebirth-multi').innerText = "x" + formatNumber(1 + game.rebirths);
+            if(autoCPS !== undefined) document.getElementById('auto-cps').innerText = formatNumber(autoCPS);
+            if(manualCPS !== undefined) document.getElementById('manual-cps').innerText = manualCPS;
+
+            document.getElementById('total-pet-count').innerText = game.inventory.length;
+
+            // Rebirth Progress
+            let rCost = 1000000 * Math.pow(10, game.rebirths);
+            if(document.getElementById('rebirth-modal').style.display === 'flex') {
+                document.getElementById('rebirth-cost-final').innerText = formatNumber(rCost) + " Clicks";
+                let pct = (game.clicks / rCost) * 100;
+                if(pct > 100) pct = 100;
+                let circle = document.getElementById('rebirth-progress-circle');
+                let circumference = 628; 
+                let offset = circumference - (pct / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                document.getElementById('rebirth-progress-text').innerText = Math.floor(pct) + "%";
+                document.getElementById('rebirth-reward-display').innerText = `+100% 永続倍率 (現在: x${1+game.rebirths})`;
+                let rBtn = document.getElementById('rebirth-execute-btn');
+                rBtn.disabled = game.clicks < rCost;
+            }
+
+            document.querySelectorAll('.upgrade-buy-btn').forEach(btn => { let cost = parseFloat(btn.dataset.cost); btn.disabled = game.clicks < cost; });
+            document.querySelectorAll('.world-unlock-btn').forEach(btn => { let cost = parseFloat(btn.dataset.cost); btn.disabled = game.clicks < cost; });
+            document.querySelectorAll('.diamond-btn').forEach(btn => { let cost = parseFloat(btn.dataset.cost); btn.disabled = game.gems < cost; });
+
+            if(currentEgg && document.getElementById('egg-buy-modal').style.display === 'flex') {
+                let realAmount = 0;
+                if(eggBuyAmount === 'max') {
+                    realAmount = Math.floor(game.clicks / currentEgg.cost);
+                    if(realAmount < 1) realAmount = 1; if(realAmount > 200) realAmount = 200;
+                } else { realAmount = eggBuyAmount; }
+                let totalCost = currentEgg.cost * realAmount;
+                document.getElementById('egg-cost-disp').innerHTML = `<i class="bi bi-cursor-fill"></i> ${formatNumber(totalCost)}`;
+                let buyBtn = document.querySelector('.btn-buy-once');
+                if(game.clicks < totalCost) {
+                    buyBtn.style.opacity = 0.5; buyBtn.style.pointerEvents = 'none'; buyBtn.style.background = '#95a5a6';
+                } else {
+                    buyBtn.style.opacity = 1; buyBtn.style.pointerEvents = 'auto'; buyBtn.style.background = '#2ecc71';
+                }
+            }
+            
+            // Only update time text here
+            for(let key in game.buffs) {
+                let el = document.getElementById(`buff-timer-${key}`);
+                if(el) {
+                    let min = Math.floor(game.buffs[key]/60);
+                    let sec = Math.floor(game.buffs[key]%60);
+                    el.innerText = `${min}:${sec.toString().padStart(2,'0')}`;
+                }
+            }
+        }
+        
+        function updateBuffDisplay() {
+            const buffContainer = document.getElementById('active-buffs');
+            // Check if rebuild needed (count diff)
+            let currentChildren = buffContainer.childElementCount;
+            let buffKeys = Object.keys(game.buffs);
+            if(currentChildren === buffKeys.length) return; // Optimization: only rebuild if count changes
+
+            buffContainer.innerHTML = "";
+            for(let key in game.buffs) {
+                let item = DIAMOND_SHOP.find(x=>x.id===key);
+                if(item) {
+                    let min = Math.floor(game.buffs[key]/60);
+                    let sec = Math.floor(game.buffs[key]%60);
+                    let div = document.createElement('div');
+                    div.className = 'buff-pill buff-intro'; 
+                    div.innerHTML = `<i class="bi ${item.icon}"></i> <span id="buff-timer-${key}">${min}:${sec.toString().padStart(2,'0')}</span>`;
+                    div.style.borderColor = RARITY_COLORS[item.rarity];
+                    div.onpointermove = (e) => showTooltip(e, item.name, item.desc, `<div style="color:${RARITY_COLORS[item.rarity]}">${item.rarity}</div>`, RARITY_COLORS[item.rarity]);
+                    div.onpointerleave = hideTooltip;
+                    buffContainer.appendChild(div);
+                }
+            }
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-'+id).classList.add('active');
+            const tabs = ['upgrades','eggs','pets','shop','worlds','rebirth'];
+            document.querySelectorAll('.tab-btn')[tabs.indexOf(id)].classList.add('active');
+            document.querySelector('.bulk-controls').style.display = (id === 'upgrades') ? 'flex' : 'none';
+        }
+
+        /* --- RENDER UPGRADES --- */
+        function renderUpgrades() {
+            const cont = document.getElementById('tab-upgrades');
+            cont.innerHTML = "";
+            BUILDING_TYPES.forEach(b => {
+                let lvl = game.buildings[b.id] || 0;
+                let isLocked = game.world < b.worldReq; 
+                if(isLocked && b.worldReq > 0) return;
+                
+                let amount = 0, cost = 0;
+                if(buyMode === 'max') {
+                    amount = getMaxBuyable(b, lvl, game.clicks);
+                    if(amount === 0) { amount = 1; cost = getSingleCost(b, lvl); }
+                    else { cost = getBulkCost(b, lvl, amount); }
+                } else {
+                    amount = buyMode;
+                    cost = getBulkCost(b, lvl, amount);
+                }
+
+                let typeBadge = '';
+                if(b.type === 'auto') typeBadge = '<span class="item-type-badge badge-auto">自動</span>';
+                if(b.type === 'click') typeBadge = '<span class="item-type-badge badge-click">クリック</span>';
+                if(b.type === 'gold') typeBadge = '<span class="item-type-badge badge-gold">ゴールド</span>';
+                if(b.type === 'diamond') typeBadge = '<span class="item-type-badge badge-diamond">ダイヤ</span>';
+
+                let div = document.createElement('div');
+                div.className = 'item-card';
+                div.innerHTML = `
+                    <div class="item-icon"><i class="bi ${b.icon}"></i></div>
+                    <div>
+                        <div style="font-weight:bold;">${b.name} <span style="font-size:0.8rem; background:#333; color:white; padding:2px 8px; border-radius:10px;">Lv.${lvl}</span> ${typeBadge}</div>
+                        <div style="font-size:0.8rem; opacity:0.8;">${b.desc}</div>
+                    </div>
+                    <button class="buy-btn upgrade-buy-btn" data-cost="${cost}" onclick="buyBuilding('${b.id}')">
+                        <div>${amount===0?'1':amount}個購入</div>
+                        <div style="font-size:0.8rem;"><i class="bi bi-cursor-fill"></i> ${formatNumber(cost)}</div>
+                    </button>
+                `;
+                cont.appendChild(div);
+            });
+            updateUI(cachedAutoCPS, manualClickHistory.length);
+        }
+
+        function buyBuilding(id) {
+            let b = BUILDING_TYPES.find(x => x.id === id);
+            if(!b) return;
+            let lvl = game.buildings[id] || 0;
+            let amount = 0, cost = 0;
+            if(buyMode === 'max') {
+                amount = getMaxBuyable(b, lvl, game.clicks);
+                if(amount > 0) cost = getBulkCost(b, lvl, amount);
+            } else {
+                amount = buyMode;
+                cost = getBulkCost(b, lvl, amount);
+            }
+            if (amount > 0 && game.clicks >= cost) {
+                game.clicks -= cost;
+                game.buildings[id] = lvl + amount;
+                recalcStats();
+                renderUpgrades();
+            }
+        }
+
+        /* --- EGGS --- */
+        function renderEggs() {
+            const cont = document.getElementById('egg-list'); cont.innerHTML = "";
+            EGGS.forEach(egg => {
+                let div = document.createElement('div'); div.className = 'item-card';
+                let tt = egg.pets.map(p=>`<div class="rarity-row"><span style="color:${RARITY_COLORS[p.rarity]}">${p.name}</span><span>${(p.chance*100).toFixed(0)}%</span></div>`).join('');
+                div.onpointermove = (e) => showTooltip(e, egg.name, `Pets:`, tt);
+                div.onpointerleave = hideTooltip;
+                div.innerHTML = `
+                    <div class="item-icon" style="border-color:#ffeaa7;"><i class="bi bi-egg-fill" style="color:#ffeaa7;"></i></div>
+                    <div><div style="font-weight:bold;">${egg.name}</div><div style="font-size:0.8rem;">${egg.pets.length}種類のペット</div></div>
+                    <button class="buy-btn" onclick="openEggModal(${egg.id})">購入画面へ</button>
+                `;
+                cont.appendChild(div);
+            });
+        }
+        function openEggModal(id) {
+            currentEgg = EGGS.find(e => e.id === id);
+            document.getElementById('modal-egg-name').innerText = currentEgg.name;
+            selectEggAmount(1);
+            stopAutoHatch(); 
+            document.getElementById('egg-buy-modal').style.display = 'flex';
+            updateUI(cachedAutoCPS, manualClickHistory.length);
+        }
+        function selectEggAmount(amt) {
+            eggBuyAmount = amt;
+            document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('selected'));
+            let btns = document.querySelectorAll('.amt-btn');
+            for(let btn of btns) { if(btn.innerText === (amt === 'max' ? "MAX" : amt.toString())) btn.classList.add('selected'); }
+            updateUI(cachedAutoCPS, manualClickHistory.length);
+        }
+        function toggleAutoHatch() {
+            autoHatchEnabled = !autoHatchEnabled;
+            let btn = document.getElementById('btn-auto-hatch');
+            let txt = document.getElementById('auto-status-text');
+            if(autoHatchEnabled) {
+                btn.classList.add('active'); txt.innerText = "ON"; executeBuyEgg();
+            } else { stopAutoHatch(); }
+        }
+        function stopAutoHatch() {
+            autoHatchEnabled = false; if(autoHatchTimer) clearTimeout(autoHatchTimer);
+            let btn = document.getElementById('btn-auto-hatch');
+            let txt = document.getElementById('auto-status-text');
+            if(btn) btn.classList.remove('active'); if(txt) txt.innerText = "OFF";
+        }
+        function executeBuyEgg() {
+            if(!currentEgg) return;
+            let realAmount = 0;
+            if(eggBuyAmount === 'max') {
+                realAmount = Math.floor(game.clicks / currentEgg.cost);
+                if(realAmount < 1) { if(autoHatchEnabled) stopAutoHatch(); return; }
+                if(realAmount > 200) realAmount = 200;
+            } else { realAmount = eggBuyAmount; }
+            let cost = currentEgg.cost * realAmount;
+            if(game.clicks >= cost) {
+                game.clicks -= cost;
+                if(!autoHatchEnabled) closeModal('egg-buy-modal');
+                hatchPets(realAmount);
+            } else { if(autoHatchEnabled) stopAutoHatch(); }
+        }
+        function hatchPets(amount) {
+            const modal = document.getElementById('hatch-modal');
+            const grid = document.getElementById('hatch-result-container');
+            grid.innerHTML = ""; modal.style.display = 'flex';
+            for(let i=0; i<amount; i++) {
+                let r = Math.random(), c = 0, pet = currentEgg.pets[0];
+                for(let p of currentEgg.pets) { c += p.chance; if(r <= c) { pet = p; break; } }
+                game.inventory.push({ uid: Date.now()+Math.random(), name: pet.name, rarity: pet.rarity, power: pet.power, equipped: false });
+                let card = document.createElement('div'); card.className = 'hatch-card'; 
+                card.style.borderColor = RARITY_COLORS[pet.rarity]; 
+                card.style.animationDelay = (i*0.05)+'s';
+                card.innerHTML = `<i class="bi bi-egg-fill" style="color:${RARITY_COLORS[pet.rarity]};"></i><div class="hatch-name">${pet.name}</div><div class="hatch-rarity" style="color:${RARITY_COLORS[pet.rarity]};">${pet.rarity}</div>`;
+                grid.appendChild(card);
+            }
+            renderInventory(); recalcStats();
+            if(autoHatchEnabled) autoHatchTimer = setTimeout(() => executeBuyEgg(), 1000);
+        }
+        function closeHatchModal() { stopAutoHatch(); closeModal('hatch-modal'); }
+
+        /* --- DIAMOND SHOP --- */
+        function renderShop() {
+            const cont = document.getElementById('tab-shop'); cont.innerHTML = "";
+            DIAMOND_SHOP.forEach(i => {
+                let div = document.createElement('div'); div.className = 'item-card diamond-item';
+                div.innerHTML = `<div class="item-icon" style="background:white;"><i class="bi ${i.icon}" style="color:#00d2ff;"></i></div><div><div style="font-weight:bold;">${i.name}</div><div style="font-size:0.8rem;">${i.desc}</div></div><button class="buy-btn diamond-btn" data-cost="${i.cost}" onclick="buyDiamondItem('${i.id}')"><i class="bi bi-gem-fill"></i> ${i.cost}</button>`;
+                cont.appendChild(div);
+            });
+            updateUI(cachedAutoCPS, manualClickHistory.length);
+        }
+        function buyDiamondItem(id) {
+            let item = DIAMOND_SHOP.find(x=>x.id===id);
+            if(game.gems>=item.cost) {
+                game.gems-=item.cost;
+                if(item.type==='buff') {
+                    if(game.buffs[id]) game.buffs[id] += item.duration; else game.buffs[id] = item.duration;
+                    recalcStats();
+                    showNotification(`${item.name}を発動しました！`, 'success');
+                }
+                else if(item.type==='pet') {
+                    game.inventory.push({uid:Date.now(), name:item.name, rarity:item.rarity, power:item.power, equipped:false});
+                    renderInventory();
+                    showItemGetModal("bi-egg-fill", item.name, item.rarity, "ペット獲得！");
+                }
+                updateUI(cachedAutoCPS, manualClickHistory.length);
+            }
+        }
+        function showItemGetModal(icon, name, rarity, sub) {
+            const modal = document.getElementById('hatch-modal');
+            const grid = document.getElementById('hatch-result-container');
+            grid.innerHTML = ""; modal.style.display = 'flex';
+            let card = document.createElement('div'); card.className = 'hatch-card';
+            card.style.borderColor = RARITY_COLORS[rarity]; card.style.transform = "scale(1)"; card.style.opacity = "1";
+            card.innerHTML = `<i class="bi ${icon}" style="color:${RARITY_COLORS[rarity]};"></i><div class="hatch-name">${name}</div><div class="hatch-rarity" style="color:${RARITY_COLORS[rarity]};">${sub}</div>`;
+            grid.appendChild(card);
+        }
+
+        /* --- COMPETITIVE LEADERBOARD LOGIC (RIVALRY UPDATE) --- */
+        function initLeaderboard() {
+            leaderboardData = [];
+            
+            let myScore = game.clicks > 100 ? game.clicks : 100;
+            // Cap the visual max to something absurd but related to player
+            let topScore = myScore * 1e20;
+            if(topScore < 1e30) topScore = 1e30; 
+            
+            for(let i=1; i<=10000; i++) {
+                let pos = (i - 1) / 9999; 
+                let curve = Math.pow(1 - pos, 15); 
+                let score = 100 + (topScore - 100) * curve;
+                let noise = 0.9 + Math.random() * 0.2;
+                score *= noise;
+
+                // CPS Logic: Proportional to score
+                let growthRate = 0;
+                if(i <= 100) growthRate = 0.05; // Top players fast
+                else if(i <= 1000) growthRate = 0.01;
+                else growthRate = 0.001; 
+                
+                growthRate *= (0.8 + Math.random() * 0.4);
+                let cps = score * growthRate;
+                if(cps < 1) cps = 1;
+
+                leaderboardData.push({ id:i, name:`Player${Math.floor(Math.random()*999999)}`, score: score, cps: cps, growthRate: growthRate, isMe:false });
+            }
+        }
+
+        function updateLeaderboard() {
+            let myCPS = cachedAutoCPS + (manualClickHistory.length * (cachedClickPower/2));
+            if(myCPS < 1) myCPS = 1;
+
+            leaderboardData.forEach((p, idx) => {
+                // RIVALRY LOGIC: Top 10 players are extremely competitive against YOU
+                if (idx < 10) {
+                    let baseCPS = p.score * p.growthRate;
+                    
+                    // 1. Rubber Band: If they are behind or close to player, they surge
+                    if (p.score < game.clicks * 1.5) {
+                        // Boost massively to create competition
+                        let competitiveSpeed = myCPS * 1.1; // Slightly faster than player
+                        p.cps = Math.max(baseCPS, competitiveSpeed);
+                        
+                        // Random "Surge" (They bought an upgrade!)
+                        if (Math.random() < 0.05) {
+                            p.score += myCPS * 10; // Instant jump
+                        }
+                    } 
+                    // 2. Rubber Band: If they are WAY ahead, they slow down (get bored/stuck)
+                    else if (p.score > game.clicks * 5) {
+                        p.cps = baseCPS * 0.1; // Slow down
+                    }
+                    // Default behavior
+                    else {
+                        p.cps = baseCPS;
+                    }
+                } else {
+                    // Standard Logic for everyone else
+                    p.score += p.cps;
+                }
+                
+                // Add CPS
+                p.score += p.cps;
+            });
+
+            if(document.getElementById('leaderboard-modal').style.display === 'flex') {
+                renderLeaderboard();
+            }
+        }
+
+        function renderLeaderboard() {
+            let myEntry = { id:'me', name:"自分 (You)", score:game.clicks, cps: cachedAutoCPS, isMe:true };
+            let fullList = [...leaderboardData, myEntry].sort((a,b)=>b.score-a.score);
+            
+            // Find my rank
+            let myRankIndex = fullList.findIndex(x => x.isMe);
+            let myRank = myRankIndex + 1;
+
+            // Render Sticky Footer
+            const footer = document.getElementById('lb-sticky-footer');
+            footer.innerHTML = "";
+            let myStickyRow = document.createElement('div'); 
+            myStickyRow.className = "lb-row me";
+            myStickyRow.style.borderBottom = "none";
+            
+            // Calc Overtake/Overtaken for sticky
+            let stickyDiff = "";
+            if(myRank > 1) {
+                let ahead = fullList[myRank-2];
+                let diff = ahead.score - game.clicks;
+                if(myEntry.cps > ahead.cps) {
+                    let sec = diff / (myEntry.cps - ahead.cps);
+                    stickyDiff = `<span style="color:#2ecc71; font-size:0.8rem; margin-left:10px;">↑ あと${formatTime(sec)}で抜けます</span>`;
+                }
+            }
+            if(myRank < fullList.length) {
+                let behind = fullList[myRank];
+                if(behind.cps > myEntry.cps) {
+                    let diff = game.clicks - behind.score;
+                    let sec = diff / (behind.cps - myEntry.cps);
+                    stickyDiff += `<span style="color:#e74c3c; font-size:0.8rem; margin-left:10px;">↓ あと${formatTime(sec)}で抜かれます</span>`;
+                }
+            }
+
+            myStickyRow.innerHTML = `
+                <div class="lb-rank">#${myRank}</div>
+                <div class="lb-name">自分 (You) ${stickyDiff}</div>
+                <div class="lb-score">${formatNumber(game.clicks)}</div>
+            `;
+            footer.appendChild(myStickyRow);
+
+            // Render List
+            const cont = document.getElementById('lb-content'); cont.innerHTML="";
+            let start = (lbPage-1)*100;
+            let end = start + 100;
+            let pageList = fullList.slice(start, end);
+            
+            pageList.forEach((p, i) => {
+                let rank = start + i + 1;
+                let diffText = "";
+                
+                let d = document.createElement('div'); d.className=`lb-row ${p.isMe?'me':''}`;
+                let styleStr = "";
+                if(rank === 1) styleStr = "color:#f1c40f; font-weight:900; font-size:1.1rem;";
+                else if(rank === 2) styleStr = "color:#bdc3c7; font-weight:800;";
+                else if(rank === 3) styleStr = "color:#d35400; font-weight:800;";
+
+                d.innerHTML=`
+                    <div class="lb-rank" style="${styleStr}">#${rank}</div>
+                    <div class="lb-name">${p.name} <span class="lb-diff">${diffText}</span></div>
+                    <div class="lb-score">${formatNumber(p.score)}</div>
+                `;
+                cont.appendChild(d);
+            });
+            document.getElementById('lb-page-disp').innerText = `${lbPage} / ${Math.ceil(fullList.length/100)}`;
+        }
+        
+        function formatTime(sec) {
+            if(sec < 0) return "0秒";
+            if(!isFinite(sec)) return "∞";
+            if(sec > 3600*24) return ">1日";
+            if(sec > 3600) return Math.floor(sec/3600) + "時間";
+            if(sec > 60) return Math.floor(sec/60) + "分" + Math.floor(sec%60) + "秒";
+            return Math.floor(sec) + "秒";
+        }
+
+        function changeLbPage(d) { 
+            lbPage+=d; 
+            if(lbPage<1)lbPage=1; 
+            if(lbPage>101)lbPage=101; 
+            renderLeaderboard(); 
+        }
+
+        /* --- UTILS --- */
+        function renderInventory() {
+            const cont = document.getElementById('inventory-container'); cont.innerHTML = "";
+            let equipped = 0;
+            game.inventory.sort((a,b) => (a.equipped===b.equipped)?(b.power-a.power):(a.equipped?-1:1));
+            game.inventory.forEach(p => {
+                if(p.equipped) equipped++;
+                let div = document.createElement('div'); div.className = 'pet-slot'; div.style.borderColor = RARITY_COLORS[p.rarity];
+                if(p.equipped) div.innerHTML += `<div class="equipped-marker"></div>`;
+                div.innerHTML += `<i class="bi bi-reddit" style="color:${RARITY_COLORS[p.rarity]}"></i>`;
+                div.onclick = () => { if(!p.equipped && game.inventory.filter(x=>x.equipped).length>=5) return showNotification("装備上限は5体です", 'error'); p.equipped=!p.equipped; renderInventory(); recalcStats(); };
+                div.onpointermove = (e) => showTooltip(e, p.name, `パワー: x${formatNumber(p.power)}`, `<span style="color:${RARITY_COLORS[p.rarity]}">${p.rarity}</span>`, RARITY_COLORS[p.rarity]);
+                div.onpointerleave = hideTooltip;
+                cont.appendChild(div);
+            });
+            document.getElementById('equip-count').innerText = equipped;
+        }
+        function equipBest() {
+            game.inventory.forEach(p=>p.equipped=false);
+            game.inventory.sort((a,b)=>b.power-a.power);
+            for(let i=0; i<Math.min(5, game.inventory.length); i++) game.inventory[i].equipped=true;
+            renderInventory(); recalcStats();
+        }
+        function renderWorlds() {
+            const cont = document.getElementById('tab-worlds'); cont.innerHTML = "";
+            WORLDS.forEach(w => {
+                let unlocked = w.id <= game.world;
+                let canBuy = w.id === game.world + 1;
+                let btn = unlocked ? `<button class="buy-btn" style="background:#3498db; border-color:#2980b9;" onclick="changeWorld(${w.id})">テレポート</button>` : (canBuy ? `<button class="buy-btn world-unlock-btn" data-cost="${w.cost}" onclick="unlockWorld(${w.id})">解放: ${formatNumber(w.cost)}</button>` : `<button class="buy-btn" disabled>ロック</button>`);
+                let div = document.createElement('div'); div.className = `item-card ${!unlocked&&!canBuy?'locked-upgrade':''}`;
+                if(game.world===w.id) div.style.borderColor = "#2ecc71";
+                div.innerHTML = `<div class="item-icon"><i class="bi bi-globe"></i></div><div><div style="font-weight:bold;">${w.name}</div><div style="font-size:0.8rem;">倍率: x${formatNumber(w.multi)}</div></div>${btn}`;
+                if(!unlocked&&!canBuy) div.innerHTML+=`<div class="lock-overlay"><i class="bi bi-lock-fill"></i></div>`;
+                cont.appendChild(div);
+            });
+        }
+        function unlockWorld(id) {
+            if(game.clicks>=WORLDS[id].cost) { game.clicks-=WORLDS[id].cost; game.world=id; changeWorld(id); renderWorlds(); renderUpgrades(); recalcStats(); }
+        }
+        function changeWorld(id, force) {
+            if(game.world!==id && !force) game.world=id;
+            let w = WORLDS[id]; document.body.style.background = w.bg;
+            document.getElementById('world-badge').innerHTML = `<i class="bi bi-globe"></i> ${w.name}`;
+            if(audioPlayer.src !== w.music) { audioPlayer.src = w.music; audioPlayer.play().catch(()=>{}); }
+            renderUpgrades(); recalcStats();
+        }
+        function doRebirth() {
+            let cost = 1000000 * Math.pow(10, game.rebirths);
+            if(game.clicks>=cost) {
+                game.clicks=0; game.rebirths++; game.buildings={}; game.world=0;
+                changeWorld(0); renderUpgrades(); renderWorlds(); recalcStats(); 
+                closeModal('rebirth-modal');
+                showNotification("リバース成功！永続倍率獲得！", 'success');
+            }
+        }
+        function saveGame() { localStorage.setItem('ps99_ultimate_v2.6_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
+        function loadGame() {
+            let saved = localStorage.getItem('ps99_ultimate_v2.6_save');
+            if(saved) {
+                try { let parsed = JSON.parse(saved); if(parsed.version === GAME_VERSION) { game = { ...game, ...parsed }; } } catch(e) {}
+            }
+        }
+        function downloadSave() { let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(game)],{type:'application/json'})); a.download=`ps99_save.json`; a.click(); }
+        function uploadSave(i) {
+            let r=new FileReader(); r.onload=e=>{ try{ let d = JSON.parse(e.target.result); if(d.version === GAME_VERSION) { game={...game, ...d}; renderUpgrades(); renderInventory(); renderWorlds(); recalcStats(); showNotification("復元完了", 'success'); } }catch(x){showNotification("エラー", 'error');} };
+            if(i.files[0]) r.readAsText(i.files[0]);
+        }
+        function hardReset() { 
+            if(confirm("本当に全データを削除しますか？\nこの操作は取り消せません。")) { 
+                localStorage.removeItem('ps99_ultimate_v2.6_save'); 
+                showNotification("データを削除しました。リロードします...", 'success');
+                setTimeout(() => location.reload(), 1500);
+            } 
+        }
+
+        window.openModal=function(id){ if(id==='leaderboard-modal')renderLeaderboard(); document.getElementById(id).style.display='flex'; }
+        window.closeModal=function(id){ document.getElementById(id).style.display='none'; }
+        
+        const tooltip=document.getElementById('custom-tooltip');
+        window.showTooltip=function(e,t,d,s,color){ 
+            tooltip.style.display='block'; 
+            tooltip.style.borderColor = color || 'rgba(255,255,255,0.2)';
+            document.getElementById('tt-title').innerText=t; 
+            document.getElementById('tt-desc').innerText=d; 
+            document.getElementById('tt-stats').innerHTML=s||""; 
+            moveTooltip(e); 
+        }
+        window.hideTooltip=function(){ tooltip.style.display='none'; }
+        function moveTooltip(e){ let x=e.clientX+15, y=e.clientY+15; if(x+250>innerWidth)x-=260; if(y+150>innerHeight)y-=150; tooltip.style.left=x+'px'; tooltip.style.top=y+'px'; }
+        document.addEventListener('pointermove', e => { if(tooltip.style.display==='block') moveTooltip(e); });
+    </script>
+</body>
+</html>
