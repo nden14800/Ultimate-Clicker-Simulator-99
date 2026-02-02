@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Clicker Simulator 99 - Void Fix</title>
+    <title>Ultimate Clicker Simulator 99 - Infinite Edition</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +34,7 @@
             --rarity-taco: #f1c40f;
             --rarity-potion: #e84393;
             --rarity-godly: #ff0055;
+            --rarity-zenith: #ffffff; /* New Rarity */
         }
 
         * {
@@ -285,7 +286,7 @@
             width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        /* --- Rebirth Modal UI (IMPROVED) --- */
+        /* --- Rebirth Modal UI --- */
         .rebirth-modal-center {
             display: flex; flex-direction: column; align-items: center; width: 100%; color: #fff;
         }
@@ -372,7 +373,6 @@
         .lb-diff { font-size: 0.75rem; color: #e74c3c; margin-left: 10px; font-weight: bold; }
         .lb-footer { padding: 15px; background: #eee; display: flex; justify-content: center; gap: 20px; align-items: center; border-top: 1px solid #ccc; }
         
-        /* Sticky User Rank in Leaderboard */
         #lb-sticky-footer {
             background: #ffeaa7; border-top: 4px solid #fdcb6e; padding: 0;
             box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10;
@@ -686,7 +686,7 @@
 
     <script>
         /* ================= CONFIGURATION ================= */
-        const GAME_VERSION = 2.8; 
+        const GAME_VERSION = 3.0; 
         const SUFFIXES = ["K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qg", "Uqg", "Dqg", "Tqg", "Qaqg", "Qiqg", "Sxqg", "Spqg", "Ocqg", "Noqg", "Qqg", "Uqqg", "Dqqg", "Tqqg", "Qaqqg", "Qiqqg", "Sxqqg", "Spqqg", "Ocqqg", "Noqqg", "Sg", "Usg", "Dsg", "Tsg", "Qasg", "Qisg", "Sxsg", "Spsg", "Ocsg", "Nosg", "Spg", "Uspg", "Dspg", "Tspg", "Qaspg", "Qispg", "Sxspg", "Spspg", "Ocspg", "Nospg", "Og", "Uog", "Dog", "Tog", "Qaog", "Qiog", "Sxog", "Spog", "Ocog", "Noog", "Ng", "Ung", "Dng", "Tng", "Qang", "Qing", "Sxng", "Spng", "Ocng", "Nong", "Ce", "Uce"];
         
         const RARITY_COLORS = {
@@ -700,21 +700,41 @@
             "Secret": "#000000",
             "Taco": "#f1c40f",
             "Potion": "#e84393",
-            "Godly": "#ff0055"
+            "Godly": "#ff0055",
+            "Zenith": "#ffffff"
         };
 
         function formatNumber(num) {
             if (num < 1000) return Math.floor(num).toString();
-            if (!isFinite(num)) return "Infinite";
+            // INFINITE HANDLER: Custom Suffix Generation
+            if (!isFinite(num)) return "MAX CAP";
+            
             let exponent = Math.floor(Math.log10(num));
             let tier = Math.floor(exponent / 3);
             if (tier === 0) return Math.floor(num).toString();
+            
+            let suffix = "";
             let suffixIndex = tier - 1;
+            
             if (suffixIndex < SUFFIXES.length) {
-                let suffix = SUFFIXES[suffixIndex];
-                let scale = Math.pow(10, tier * 3);
-                return (num / scale).toFixed(2) + suffix;
-            } else { return num.toExponential(2); }
+                suffix = SUFFIXES[suffixIndex];
+            } else {
+                // Generate aa, ab, ac... logic
+                let remaining = suffixIndex - SUFFIXES.length;
+                let alphabets = "abcdefghijklmnopqrstuvwxyz";
+                let count = Math.floor(remaining / 26);
+                let remainder = remaining % 26;
+                
+                if (count < 26) {
+                    suffix = alphabets[count] + alphabets[remainder];
+                } else {
+                    // Falls back to generic if even that is exceeded (unlikely in normal play)
+                    suffix = "e" + exponent;
+                }
+            }
+            
+            let scale = Math.pow(10, tier * 3);
+            return (num / scale).toFixed(2) + suffix;
         }
 
         function showNotification(msg, type) {
@@ -729,38 +749,54 @@
             setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 3500);
         }
 
-        /* ================= GAME DATA DEF (RE-REBALANCED FOR VOID FIX) ================= */
-        // Costs lowered significantly after World 10 to smooth progression
+        /* ================= GAME DATA DEF ================= */
+        // Rebalanced World Multipliers (Smoother Curve)
         const WORLDS = [
             { id: 0, name: "オーバーワールド", multi: 1, cost: 0, bg: "linear-gradient(135deg, #00c6ff, #0072ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
-            { id: 1, name: "キャンディランド", multi: 8, cost: 500000, bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
-            { id: 2, name: "溶岩の領域", multi: 50, cost: 100000000, bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 3, name: "宇宙空間", multi: 300, cost: 50000000000, bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
-            { id: 4, name: "タコスゾーン", multi: 1500, cost: 1e14, bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
-            { id: 5, name: "サイバーシティ", multi: 8000, cost: 1e15, bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
-            { id: 6, name: "アトランティス", multi: 50000, cost: 1e18, bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
-            { id: 7, name: "天国の門", multi: 250000, cost: 1e21, bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
-            { id: 8, name: "暗黒のダンジョン", multi: 1e6, cost: 1e30, bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
-            { id: 9, name: "銀河の核", multi: 1e7, cost: 1e45, bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
-            { id: 10, name: "虚無の次元", multi: 1e8, cost: 1e60, bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
-            
-            // --- FIX: LOWER COSTS AND SMOOTHER CURVE ---
-            { id: 11, name: "ネオン東京", multi: 5e9, cost: 1e65, bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
-            { id: 12, name: "スチームパンク", multi: 5e10, cost: 1e70, bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
-            { id: 13, name: "8ビット王国", multi: 5e11, cost: 1e76, bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 14, name: "ドラゴンの巣", multi: 1e13, cost: 1e83, bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
-            { id: 15, name: "忍の里", multi: 1e14, cost: 1e90, bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
-            { id: 16, name: "ゴールドラッシュ", multi: 1e16, cost: 1e98, bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
-            { id: 17, name: "お化け屋敷", multi: 1e18, cost: 1e107, bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
-            { id: 18, name: "氷結ツンドラ", multi: 1e20, cost: 1e116, bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
-            { id: 19, name: "砂漠の遺跡", multi: 1e22, cost: 1e126, bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
-            { id: 20, name: "アマゾンジャングル", multi: 1e24, cost: 1e137, bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
-            { id: 21, name: "ユートピア3000", multi: 1e27, cost: 1e149, bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 22, name: "ノワールシティ", multi: 1e30, cost: 1e162, bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
-            { id: 23, name: "グリッチマトリックス", multi: 1e35, cost: 1e180, bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" }
+            { id: 1, name: "キャンディランド", multi: 5, cost: 500000, bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
+            { id: 2, name: "溶岩の領域", multi: 25, cost: 100000000, bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 3, name: "宇宙空間", multi: 150, cost: 50000000000, bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
+            { id: 4, name: "タコスゾーン", multi: 500, cost: 1e14, bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
+            { id: 5, name: "サイバーシティ", multi: 2500, cost: 1e16, bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
+            { id: 6, name: "アトランティス", multi: 10000, cost: 1e19, bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
+            { id: 7, name: "天国の門", multi: 50000, cost: 1e22, bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
+            { id: 8, name: "暗黒のダンジョン", multi: 2e5, cost: 1e26, bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
+            { id: 9, name: "銀河の核", multi: 1e6, cost: 1e32, bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
+            { id: 10, name: "虚無の次元", multi: 5e6, cost: 1e38, bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
+            { id: 11, name: "ネオン東京", multi: 2e7, cost: 1e45, bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
+            { id: 12, name: "スチームパンク", multi: 1e8, cost: 1e53, bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
+            { id: 13, name: "8ビット王国", multi: 5e8, cost: 1e62, bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 14, name: "ドラゴンの巣", multi: 2e9, cost: 1e72, bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
+            { id: 15, name: "忍の里", multi: 1e10, cost: 1e83, bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
+            { id: 16, name: "ゴールドラッシュ", multi: 5e10, cost: 1e95, bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
+            { id: 17, name: "お化け屋敷", multi: 2e11, cost: 1e108, bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
+            { id: 18, name: "氷結ツンドラ", multi: 1e12, cost: 1e122, bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
+            { id: 19, name: "砂漠の遺跡", multi: 5e12, cost: 1e137, bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
+            { id: 20, name: "アマゾンジャングル", multi: 2e13, cost: 1e153, bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
+            { id: 21, name: "ユートピア3000", multi: 1e14, cost: 1e170, bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 22, name: "ノワールシティ", multi: 5e14, cost: 1e188, bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
+            { id: 23, name: "グリッチマトリックス", multi: 2e15, cost: 1e207, bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
+            // NEW WORLDS (Doubled Content)
+            { id: 24, name: "サイバースラム", multi: 1e16, cost: 1e227, bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
+            { id: 25, name: "天空の城ラピス", multi: 5e16, cost: 1e248, bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
+            { id: 26, name: "深海トレンチ", multi: 2e17, cost: 1e270, bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
+            { id: 27, name: "マグマコア", multi: 1e18, cost: 1e293, bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 28, name: "古代ローマ", multi: 5e18, cost: 1e300, bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
+            // Beyond 1e308 (Javascript limit) handled by scaling down costs in calculation or relying on our suffix system
+            { id: 29, name: "ワイルドウェスト", multi: 2e19, cost: 1e305, bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
+            { id: 30, name: "ジュラシックパーク", multi: 1e20, cost: 1e308, bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
+            { id: 31, name: "ホラーマンション", multi: 5e20, cost: 1.7e308, bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
+            { id: 32, name: "月面基地", multi: 2e21, cost: 1e308, bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
+            { id: 33, name: "火星コロニー", multi: 1e22, cost: 1e308, bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
+            { id: 34, name: "太陽の表面", multi: 5e22, cost: 1e308, bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
+            { id: 35, name: "ブラックホール事象", multi: 2e23, cost: 1e308, bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
+            { id: 36, name: "マルチバース", multi: 1e24, cost: 1e308, bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 37, name: "ピクセル次元", multi: 5e24, cost: 1e308, bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 38, name: "抽象芸術の世界", multi: 2e25, cost: 1e308, bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
+            { id: 39, name: "ホワイトスペース", multi: 1e26, cost: 1e308, bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
+            { id: 40, name: "シンギュラリティ", multi: 1e30, cost: 1e308, bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
         ];
 
-        // Rebalanced: Eggs cost lowered to make obtaining pets feasible at World 10+
         const EGGS = [
             { id: 0, name: "スターター卵", cost: 250, pets: [{ name: "イヌ", rarity: "Basic", chance: 0.6, power: 1.5 }, { name: "ネコ", rarity: "Basic", chance: 0.35, power: 2 }, { name: "ウサギ", rarity: "Rare", chance: 0.05, power: 5 }] },
             { id: 1, name: "森の卵", cost: 15000, pets: [{ name: "クマ", rarity: "Rare", chance: 0.7, power: 15 }, { name: "キツネ", rarity: "Epic", chance: 0.25, power: 40 }, { name: "ドラゴン", rarity: "Legendary", chance: 0.05, power: 150 }] },
@@ -769,19 +805,20 @@
             { id: 4, name: "タコスの卵", cost: 5e14, pets: [{ name: "タコス", rarity: "Legendary", chance: 0.8, power: 1e5 }, { name: "ブリトー", rarity: "Mythical", chance: 0.19, power: 5e5 }, { name: "ゴールデンタコス", rarity: "Exclusive", chance: 0.01, power: 2e6 }] },
             { id: 5, name: "サイバー卵", cost: 1e16, pets: [{ name: "ロボット", rarity: "Legendary", chance: 0.8, power: 5e6 }, { name: "サイボーグ", rarity: "Mythical", chance: 0.19, power: 2e7 }, { name: "AIの神", rarity: "Exclusive", chance: 0.01, power: 1e8 }] },
             { id: 6, name: "海の卵", cost: 1e20, pets: [{ name: "サメ", rarity: "Mythical", chance: 0.8, power: 1e9 }, { name: "クラーケン", rarity: "Divine", chance: 0.19, power: 5e9 }, { name: "リヴァイアサン", rarity: "Exclusive", chance: 0.01, power: 5e10 }] },
-            { id: 7, name: "天界の卵", cost: 1e30, pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 1e12 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 1e13 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 1e15 }] },
-            { id: 8, name: "悪魔の卵", cost: 1e35, pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e16 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 1e18 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e20 }] },
-            { id: 9, name: "銀河の卵", cost: 1e45, pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 1e24 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1e26 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 1e28 }] },
-            
-            // Reduced costs significantly below
-            { id: 10, name: "次元の卵", cost: 1e55, pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 1e32 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 1e35 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 1e40 }] },
-            { id: 11, name: "ネオン卵", cost: 1e62, pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e45 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 1e50 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e55 }] },
-            { id: 12, name: "歯車の卵", cost: 1e70, pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 1e60 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1e65 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 1e70 }] },
-            { id: 13, name: "ドットの卵", cost: 1e78, pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 1e80 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 1e85 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 1e90 }] },
-            { id: 14, name: "竜の卵", cost: 1e86, pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e100 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 1e110 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e120 }] },
-            { id: 15, name: "黄金の卵", cost: 1e95, pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 1e140 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1e150 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 1e160 }] },
-            { id: 16, name: "氷の卵", cost: 1e105, pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 1e180 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 1e200 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 1e220 }] },
-            { id: 17, name: "未来の卵", cost: 1e115, pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e250 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 1e270 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e300 }] }
+            { id: 7, name: "天界の卵", cost: 1e25, pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 1e12 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 1e13 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 1e15 }] },
+            { id: 8, name: "悪魔の卵", cost: 1e30, pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e16 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 1e18 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e20 }] },
+            { id: 9, name: "銀河の卵", cost: 1e38, pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 1e24 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1e26 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 1e28 }] },
+            { id: 10, name: "次元の卵", cost: 1e45, pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 1e32 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 1e35 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 1e40 }] },
+            { id: 11, name: "ネオン卵", cost: 1e52, pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e45 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 1e50 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e55 }] },
+            { id: 12, name: "歯車の卵", cost: 1e60, pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 1e60 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1e65 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 1e70 }] },
+            { id: 13, name: "ドットの卵", cost: 1e70, pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 1e80 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 1e85 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 1e90 }] },
+            { id: 14, name: "竜の卵", cost: 1e80, pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e100 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 1e110 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e120 }] },
+            { id: 15, name: "黄金の卵", cost: 1e90, pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 1e140 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1e150 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 1e160 }] },
+            { id: 16, name: "氷の卵", cost: 1e100, pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 1e180 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 1e200 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 1e220 }] },
+            { id: 17, name: "未来の卵", cost: 1e115, pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e250 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 1e270 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e300 }] },
+            // NEW EGGS
+            { id: 18, name: "オメガ卵", cost: 1e150, pets: [{ name: "オメガ", rarity: "Divine", chance: 0.8, power: 1e320 }, { name: "アルファ", rarity: "Exclusive", chance: 0.19, power: 1e330 }, { name: "無限", rarity: "Zenith", chance: 0.01, power: 1e350 }] },
+            { id: 19, name: "深淵の卵", cost: 1e200, pets: [{ name: "深淵", rarity: "Exclusive", chance: 0.8, power: 1e400 }, { name: "奈落", rarity: "Secret", chance: 0.19, power: 1e420 }, { name: "虚無の王", rarity: "Godly", chance: 0.01, power: 1e450 }] }
         ];
 
         const DIAMOND_SHOP = [
@@ -792,163 +829,86 @@
             { id: 'click_frenzy', name: 'クリックフレンジー', desc:'3分間クリックパワー5倍', cost: 500, type: 'buff', duration: 180, icon:'bi-cursor-fill', rarity:'Epic' },
             { id: 'ultra_luck', name: 'ウルトララック', desc:'3分間ダイヤ出現率5倍', cost: 750, type: 'buff', duration: 180, icon:'bi-gem', rarity:'Legendary' },
             { id: 'mega_potion', name: 'メガポーション', desc:'2分間 全ステータス3倍', cost: 1500, type: 'buff', duration: 120, icon:'bi-fire', rarity:'Godly' },
-            { id: 'exclusive_egg', name: 'Exclusive Egg', desc:'限定ペット確定 (1e10倍)', cost: 5000, type: 'pet', power: 1e10, rarity:'Exclusive', icon:'bi-egg-fill' },
-            { id: 'secret_egg', name: 'Secret Egg', desc:'？？？ (1e15倍)', cost: 25000, type: 'pet', power: 1e15, rarity:'Secret', icon:'bi-question-circle-fill' }
-        ];
-
-        /* ================= 100 UNIQUE UPGRADES (MASSIVE BUFFS FOR LATE GAME) ================= */
-        // Upgrades after World 10 now give exponentially more to match new world costs
-        const BUILDING_TYPES = [
-            // World 0: Overworld
-            { id: 'u01', name: '木のカーソル', type: 'click', baseP: 1, baseC: 15, icon: 'bi-cursor', desc: 'クリックパワー +1', worldReq: 0 },
-            { id: 'u02', name: 'グランマ', type: 'auto', baseP: 5, baseC: 100, icon: 'bi-person-standing-dress', desc: '自動クリック +5', worldReq: 0 },
-            { id: 'u03', name: '農場', type: 'auto', baseP: 20, baseC: 1100, icon: 'bi-flower1', desc: '自動クリック +20', worldReq: 0 },
-            { id: 'u04', name: '宝石磨き', type: 'diamond', baseP: 0.1, baseC: 5000, icon: 'bi-gem', desc: 'ダイヤ出現率 +10%', worldReq: 0 },
+            { id: 'god_potion', name: '神のポーション', desc:'1分間 全ステータス10倍', cost: 10000, type: 'buff', duration: 60, icon:'bi-sun-fill', rarity:'Zenith' },
             
-            // World 1: Candy Land
-            { id: 'u05', name: '工場', type: 'auto', baseP: 200, baseC: 130000, icon: 'bi-buildings-fill', desc: '自動クリック +200', worldReq: 1 },
-            { id: 'u06', name: '砂糖のマウス', type: 'click', baseP: 100, baseC: 250000, icon: 'bi-mouse-fill', desc: 'クリックパワー +100', worldReq: 1 },
-            { id: 'u07', name: '銀のコイン', type: 'gold', baseP: 0.2, baseC: 500000, icon: 'bi-piggy-bank', desc: 'ゴールド倍率 +20%', worldReq: 1 },
-            { id: 'u08', name: 'お菓子オーブン', type: 'auto', baseP: 1000, baseC: 1.4e6, icon: 'bi-fire', desc: '自動クリック +1k', worldReq: 1 },
-
-            // World 2: Lava Realm
-            { id: 'u09', name: '寺院', type: 'auto', baseP: 5000, baseC: 20e6, icon: 'bi-bank', desc: '自動クリック +5k', worldReq: 2 },
-            { id: 'u10', name: '黒曜石マウス', type: 'click', baseP: 2000, baseC: 50e6, icon: 'bi-square-fill', desc: 'クリックパワー +2k', worldReq: 2 },
-            { id: 'u11', name: '魔法使いの塔', type: 'auto', baseP: 20000, baseC: 330e6, icon: 'bi-stars', desc: '自動クリック +20k', worldReq: 2 },
-            { id: 'u12', name: '金の延べ棒', type: 'gold', baseP: 0.5, baseC: 800e6, icon: 'bi-cash-coin', desc: 'ゴールド倍率 +50%', worldReq: 2 },
-
-            // World 3: Space Void
-            { id: 'u13', name: '宇宙船', type: 'auto', baseP: 200000, baseC: 50e9, icon: 'bi-rocket-takeoff', desc: '自動クリック +200k', worldReq: 3 },
-            { id: 'u14', name: 'スペースマウス', type: 'click', baseP: 100000, baseC: 150e9, icon: 'bi-moon-stars', desc: 'クリックパワー +100k', worldReq: 3 },
-            { id: 'u15', name: '錬金術ラボ', type: 'auto', baseP: 1e6, baseC: 500e9, icon: 'bi-flask', desc: '自動クリック +1M', worldReq: 3 },
-            { id: 'u16', name: 'メテオマイナー', type: 'diamond', baseP: 1.0, baseC: 2e12, icon: 'bi-hammer', desc: 'ダイヤ獲得量 x2', worldReq: 3 },
-
-            // World 4: Taco Zone
-            { id: 'u17', name: 'ポータル', type: 'auto', baseP: 5e6, baseC: 15e12, icon: 'bi-bullseye', desc: '自動クリック +5M', worldReq: 4 },
-            { id: 'u18', name: '金のタコス', type: 'gold', baseP: 1.0, baseC: 50e12, icon: 'bi-triangle-fill', desc: 'ゴールド倍率 +100%', worldReq: 4 },
-            { id: 'u19', name: 'タイムマシン', type: 'auto', baseP: 20e6, baseC: 250e12, icon: 'bi-hourglass-split', desc: '自動クリック +20M', worldReq: 4 },
-            { id: 'u20', name: 'サルサカーソル', type: 'click', baseP: 10e6, baseC: 1e15, icon: 'bi-droplet-fill', desc: 'クリックパワー +10M', worldReq: 4 },
-
-            // World 5: Cyber City
-            { id: 'u21', name: '反物質凝縮器', type: 'auto', baseP: 200e6, baseC: 200e15, icon: 'bi-radioactive', desc: '自動クリック +200M', worldReq: 5 },
-            { id: 'u22', name: 'レーザーポインタ', type: 'click', baseP: 100e6, baseC: 1e18, icon: 'bi-pen-fill', desc: 'クリックパワー +100M', worldReq: 5 },
-            { id: 'u23', name: 'プリズム', type: 'auto', baseP: 1e9, baseC: 5e18, icon: 'bi-gem', desc: '自動クリック +1B', worldReq: 5 },
-            { id: 'u24', name: 'ビットコイン採掘', type: 'gold', baseP: 2.0, baseC: 25e18, icon: 'bi-currency-bitcoin', desc: 'ゴールド倍率 +200%', worldReq: 5 },
-
-            // World 6: Atlantis
-            { id: 'u25', name: 'チャンセリー', type: 'auto', baseP: 10e9, baseC: 2e21, icon: 'bi-building', desc: '自動クリック +10B', worldReq: 6 },
-            { id: 'u26', name: 'トライデント', type: 'click', baseP: 5e9, baseC: 10e21, icon: 'bi-tsunami', desc: 'クリックパワー +5B', worldReq: 6 },
-            { id: 'u27', name: 'パールダイバー', type: 'diamond', baseP: 2.0, baseC: 50e21, icon: 'bi-water', desc: 'ダイヤ獲得量 x3', worldReq: 6 },
-            { id: 'u28', name: '水素発電機', type: 'auto', baseP: 50e9, baseC: 200e21, icon: 'bi-fan', desc: '自動クリック +50B', worldReq: 6 },
-
-            // World 7: Heaven Gates
-            { id: 'u29', name: 'フラクタルエンジン', type: 'auto', baseP: 500e9, baseC: 15e24, icon: 'bi-grid-3x3', desc: '自動クリック +500B', worldReq: 7 },
-            { id: 'u30', name: '天使の輪', type: 'gold', baseP: 5.0, baseC: 60e24, icon: 'bi-brightness-high', desc: 'ゴールド倍率 +500%', worldReq: 7 },
-            { id: 'u31', name: '天使の羽', type: 'click', baseP: 200e9, baseC: 250e24, icon: 'bi-feather', desc: 'クリックパワー +200B', worldReq: 7 },
-            { id: 'u32', name: '雲の宮殿', type: 'auto', baseP: 5e12, baseC: 1e27, icon: 'bi-cloud', desc: '自動クリック +5T', worldReq: 7 },
-
-            // World 8: ***** Dungeon
-            { id: 'u33', name: 'JSコンソール', type: 'auto', baseP: 50e12, baseC: 100e27, icon: 'bi-code-square', desc: '自動クリック +50T', worldReq: 8 },
-            { id: 'u34', name: '悪魔の爪', type: 'click', baseP: 20e12, baseC: 500e27, icon: 'bi-hand-index-thumb', desc: 'クリックパワー +20T', worldReq: 8 },
-            { id: 'u35', name: '地獄の穴', type: 'auto', baseP: 200e12, baseC: 2e30, icon: 'bi-fire', desc: '自動クリック +200T', worldReq: 8 },
-            { id: 'u36', name: '悪魔の契約', type: 'gold', baseP: 10.0, baseC: 10e30, icon: 'bi-file-text', desc: 'ゴールド倍率 +1000%', worldReq: 8 },
-
-            // World 9: Galactic Core
-            { id: 'u37', name: '皮質ベイカー', type: 'auto', baseP: 2e15, baseC: 1e33, icon: 'bi-cpu', desc: '自動クリック +2Qa', worldReq: 9 },
-            { id: 'u38', name: 'プラズマガン', type: 'click', baseP: 1e15, baseC: 5e33, icon: 'bi-align-center', desc: 'クリックパワー +1Qa', worldReq: 9 },
-            { id: 'u39', name: 'スターフォージ', type: 'diamond', baseP: 10.0, baseC: 25e33, icon: 'bi-hammer', desc: 'ダイヤ獲得量 x11', worldReq: 9 },
-            { id: 'u40', name: 'ブラックホール', type: 'auto', baseP: 10e15, baseC: 100e33, icon: 'bi-vinyl', desc: '自動クリック +10Qa', worldReq: 9 },
-
-            // World 10: Void Dimension
-            { id: 'u41', name: 'ヴォイドウォーカー', type: 'auto', baseP: 100e15, baseC: 10e36, icon: 'bi-person-walking', desc: '自動クリック +100Qa', worldReq: 10 },
-            { id: 'u42', name: 'Nullポインタ', type: 'click', baseP: 50e15, baseC: 50e36, icon: 'bi-slash-circle', desc: 'クリックパワー +50Qa', worldReq: 10 },
-            { id: 'u43', name: '虚無の宝箱', type: 'gold', baseP: 20.0, baseC: 200e36, icon: 'bi-box-seam', desc: 'ゴールド倍率 +2000%', worldReq: 10 },
-            { id: 'u44', name: 'リアリティエンジン', type: 'auto', baseP: 1e45, baseC: 1e39, icon: 'bi-gear-wide-connected', desc: '自動クリック +1Qad', worldReq: 10 }, // Buffed
-
-            // World 11: Neon Tokyo - Massive Buffs to bridge the gap
-            { id: 'u45', name: 'ネオン広告', type: 'auto', baseP: 1e50, baseC: 100e39, icon: 'bi-badge-ad', desc: '自動クリック +100Qad', worldReq: 11 },
-            { id: 'u46', name: 'サイバー刀', type: 'click', baseP: 5e49, baseC: 500e39, icon: 'bi-scissors', desc: 'クリックパワー +50Qad', worldReq: 11 },
-            { id: 'u47', name: '仮想通貨銀行', type: 'diamond', baseP: 30.0, baseC: 2e42, icon: 'bi-currency-exchange', desc: 'ダイヤ獲得量 x31', worldReq: 11 },
-            { id: 'u48', name: 'ホロアイドル', type: 'auto', baseP: 1e53, baseC: 10e42, icon: 'bi-person-video', desc: '自動クリック +1Sxd', worldReq: 11 },
-
-            // World 12: Steampunk
-            { id: 'u49', name: '蒸気機関', type: 'auto', baseP: 1e56, baseC: 5e45, icon: 'bi-gear-wide', desc: '自動クリック +1Spd', worldReq: 12 },
-            { id: 'u50', name: '真鍮のゴーグル', type: 'click', baseP: 5e55, baseC: 2e46, icon: 'bi-eyeglasses', desc: 'クリックパワー +500Sxd', worldReq: 12 },
-            { id: 'u51', name: 'クロックワーク', type: 'auto', baseP: 1e60, baseC: 1e47, icon: 'bi-clock-history', desc: '自動クリック +1Nod', worldReq: 12 },
-            { id: 'u52', name: 'スチームドリル', type: 'diamond', baseP: 40.0, baseC: 5e47, icon: 'bi-hammer', desc: 'ダイヤ獲得量 x41', worldReq: 12 },
-
-            // World 13: 8-bit
-            { id: 'u53', name: 'ドット絵勇者', type: 'auto', baseP: 1e65, baseC: 1e50, icon: 'bi-controller', desc: '自動クリック +1Uvg', worldReq: 13 },
-            { id: 'u54', name: 'ピクセル剣', type: 'click', baseP: 5e64, baseC: 5e50, icon: 'bi-shield-shaded', desc: 'クリックパワー +500Vg', worldReq: 13 },
-            { id: 'u55', name: 'グリッチ発生装置', type: 'auto', baseP: 1e70, baseC: 2e51, icon: 'bi-bug-fill', desc: '自動クリック +1Dvg', worldReq: 13 },
-            { id: 'u56', name: 'チートコード', type: 'gold', baseP: 100.0, baseC: 1e52, icon: 'bi-code-slash', desc: 'ゴールド倍率 +10000%', worldReq: 13 },
-
-            // World 14: Dragon's Nest
-            { id: 'u57', name: 'ドラゴンの鱗', type: 'auto', baseP: 1e75, baseC: 1e55, icon: 'bi-shield-fill', desc: '自動クリック +1Qavg', worldReq: 14 },
-            { id: 'u58', name: '炎の息吹', type: 'click', baseP: 5e74, baseC: 5e55, icon: 'bi-fire', desc: 'クリックパワー +500Tvg', worldReq: 14 },
-            { id: 'u59', name: 'ワイバーンの巣', type: 'auto', baseP: 1e80, baseC: 2e56, icon: 'bi-egg', desc: '自動クリック +1Sxvg', worldReq: 14 },
-            { id: 'u60', name: '宝の守り手', type: 'diamond', baseP: 100.0, baseC: 1e57, icon: 'bi-safe', desc: 'ダイヤ獲得量 x101', worldReq: 14 },
-
-            // World 15: Ninja Village
-            { id: 'u61', name: '手裏剣工場', type: 'auto', baseP: 1e85, baseC: 1e60, icon: 'bi-star', desc: '自動クリック +1Ocvg', worldReq: 15 },
-            { id: 'u62', name: '苦無', type: 'click', baseP: 5e84, baseC: 5e60, icon: 'bi-caret-up', desc: 'クリックパワー +500Spvg', worldReq: 15 },
-            { id: 'u63', name: '影分身の術', type: 'auto', baseP: 1e90, baseC: 2e61, icon: 'bi-people-fill', desc: '自動クリック +1Tg', worldReq: 15 },
-            { id: 'u64', name: '忍びの極意', type: 'gold', baseP: 500.0, baseC: 1e62, icon: 'bi-moon', desc: 'ゴールド倍率 +50000%', worldReq: 15 },
-
-            // World 16: Gold Rush
-            { id: 'u65', name: '巨大ツルハシ', type: 'auto', baseP: 1e95, baseC: 1e65, icon: 'bi-hammer', desc: '自動クリック +1Dtg', worldReq: 16 },
-            { id: 'u66', name: '選鉱鍋', type: 'click', baseP: 5e94, baseC: 5e65, icon: 'bi-circle', desc: 'クリックパワー +500Utg', worldReq: 16 },
-            { id: 'u67', name: '造幣局', type: 'auto', baseP: 1e100, baseC: 2e66, icon: 'bi-cash-stack', desc: '自動クリック +1Qatg', worldReq: 16 },
-            { id: 'u68', name: '銀行強盗', type: 'diamond', baseP: 1000.0, baseC: 1e67, icon: 'bi-mask', desc: 'ダイヤ獲得量 x1001', worldReq: 16 },
-
-            // World 17: Haunted House
-            { id: 'u69', name: 'エクトプラズム', type: 'auto', baseP: 1e105, baseC: 1e70, icon: 'bi-droplet-half', desc: '自動クリック +1Sxtg', worldReq: 17 },
-            { id: 'u70', name: 'ウィジャ盤', type: 'click', baseP: 5e104, baseC: 5e70, icon: 'bi-ui-checks', desc: 'クリックパワー +500Qitg', worldReq: 17 },
-            { id: 'u71', name: 'ポルターガイスト', type: 'auto', baseP: 1e110, baseC: 2e71, icon: 'bi-lamp', desc: '自動クリック +1Octg', worldReq: 17 },
-            { id: 'u72', name: '呪われた人形', type: 'gold', baseP: 10000.0, baseC: 1e72, icon: 'bi-emoji-dizzy', desc: 'ゴールド倍率 +1000000%', worldReq: 17 },
-
-            // World 18: Ice Tundra
-            { id: 'u73', name: '氷柱', type: 'auto', baseP: 1e115, baseC: 1e75, icon: 'bi-caret-down-fill', desc: '自動クリック +1Qg', worldReq: 18 },
-            { id: 'u74', name: 'イグルー村', type: 'click', baseP: 5e114, baseC: 5e75, icon: 'bi-house-door', desc: 'クリックパワー +500Notg', worldReq: 18 },
-            { id: 'u75', name: '冷凍睡眠装置', type: 'auto', baseP: 1e120, baseC: 2e76, icon: 'bi-box', desc: '自動クリック +1Dqg', worldReq: 18 },
-            { id: 'u76', name: 'イエティの毛皮', type: 'diamond', baseP: 5000.0, baseC: 1e77, icon: 'bi-snow', desc: 'ダイヤ獲得量 x5001', worldReq: 18 },
-
-            // World 19: Desert Ruins
-            { id: 'u77', name: '砂のシャベル', type: 'auto', baseP: 1e125, baseC: 1e80, icon: 'bi-recycle', desc: '自動クリック +1Qaqg', worldReq: 19 },
-            { id: 'u78', name: 'ピラミッドパワー', type: 'click', baseP: 5e124, baseC: 5e80, icon: 'bi-triangle', desc: 'クリックパワー +500Tqg', worldReq: 19 },
-            { id: 'u79', name: 'スフィンクス', type: 'auto', baseP: 1e130, baseC: 2e81, icon: 'bi-patch-question', desc: '自動クリック +1Sxqg', worldReq: 19 },
-            { id: 'u80', name: 'オアシス', type: 'gold', baseP: 50000.0, baseC: 1e82, icon: 'bi-water', desc: 'ゴールド倍率 +5000000%', worldReq: 19 },
-
-            // World 20: Amazon
-            { id: 'u81', name: 'マチェーテ', type: 'auto', baseP: 1e135, baseC: 1e85, icon: 'bi-scissors', desc: '自動クリック +1Ocqg', worldReq: 20 },
-            { id: 'u82', name: 'ツリーハウス', type: 'click', baseP: 5e134, baseC: 5e85, icon: 'bi-tree', desc: 'クリックパワー +500Spqg', worldReq: 20 },
-            { id: 'u83', name: '古代遺跡', type: 'auto', baseP: 1e140, baseC: 2e86, icon: 'bi-bank2', desc: '自動クリック +1Qqg', worldReq: 20 },
-            { id: 'u84', name: 'ジャングルの秘宝', type: 'diamond', baseP: 10000.0, baseC: 1e87, icon: 'bi-gem', desc: 'ダイヤ獲得量 x10001', worldReq: 20 },
-
-            // World 21: Utopia
-            { id: 'u85', name: 'ホバーボード', type: 'auto', baseP: 1e145, baseC: 1e90, icon: 'bi-hdd', desc: '自動クリック +1Dqqg', worldReq: 21 },
-            { id: 'u86', name: 'ナノボット', type: 'click', baseP: 5e144, baseC: 5e90, icon: 'bi-robot', desc: 'クリックパワー +500Uqqg', worldReq: 21 },
-            { id: 'u87', name: '核融合炉', type: 'auto', baseP: 1e150, baseC: 2e91, icon: 'bi-radioactive', desc: '自動クリック +1Qaqqg', worldReq: 21 },
-            { id: 'u88', name: '空中都市', type: 'gold', baseP: 100000.0, baseC: 1e92, icon: 'bi-clouds', desc: 'ゴールド倍率 +10000000%', worldReq: 21 },
-
-            // World 22: Noir City
-            { id: 'u89', name: '探偵バッジ', type: 'auto', baseP: 1e155, baseC: 1e95, icon: 'bi-shield-check', desc: '自動クリック +1Sxqqg', worldReq: 22 },
-            { id: 'u90', name: 'タイプライター', type: 'click', baseP: 5e154, baseC: 5e95, icon: 'bi-keyboard', desc: 'クリックパワー +500Qiqqg', worldReq: 22 },
-            { id: 'u91', name: 'ジャズクラブ', type: 'auto', baseP: 1e160, baseC: 2e96, icon: 'bi-music-note', desc: '自動クリック +1Ocqqg', worldReq: 22 },
-            { id: 'u92', name: '街灯', type: 'diamond', baseP: 50000.0, baseC: 1e97, icon: 'bi-lightbulb', desc: 'ダイヤ獲得量 x50001', worldReq: 22 },
-
-            // World 23: Glitch Matrix
-            { id: 'u93', name: '赤い薬', type: 'auto', baseP: 1e170, baseC: 1e100, icon: 'bi-capsule', desc: '自動クリック +1Sg', worldReq: 23 },
-            { id: 'u94', name: 'コードの雨', type: 'click', baseP: 5e169, baseC: 5e100, icon: 'bi-code', desc: 'クリックパワー +500Noqqg', worldReq: 23 },
-            { id: 'u95', name: 'アーキテクト', type: 'auto', baseP: 1e180, baseC: 2e101, icon: 'bi-person-badge', desc: '自動クリック +1Dsg', worldReq: 23 },
-            { id: 'u96', name: 'システムコア', type: 'gold', baseP: 1000000.0, baseC: 1e102, icon: 'bi-cpu-fill', desc: 'ゴールド倍率 +100000000%', worldReq: 23 },
-
-            // Endgame
-            { id: 'u97', name: '量子クリッカー', type: 'click', baseP: 1e200, baseC: 1e105, icon: 'bi-mouse2', desc: 'クリックパワー +1Ocsg', worldReq: 23 },
-            { id: 'u98', name: '多元宇宙エンジン', type: 'auto', baseP: 1e210, baseC: 1e110, icon: 'bi-globe2', desc: '自動クリック +1Spg', worldReq: 23 },
-            { id: 'u99', name: '時の紡ぎ手', type: 'auto', baseP: 1e220, baseC: 1e115, icon: 'bi-hourglass-bottom', desc: '自動クリック +1Og', worldReq: 23 },
-            { id: 'u100', name: 'オムニツール', type: 'diamond', baseP: 10000000.0, baseC: 1e120, icon: 'bi-tools', desc: 'ダイヤ獲得量 x10000001', worldReq: 23 }
+            // EXPENSIVE SINKS
+            { id: 'perm_click', name: '永続クリック強化', desc:'クリック力永久+100%', cost: 1000000, type: 'perm', power: 2, icon:'bi-mouse', rarity:'Exclusive' },
+            { id: 'perm_auto', name: '永続自動強化', desc:'自動クリック永久+100%', cost: 5000000, type: 'perm', power: 2, icon:'bi-robot', rarity:'Secret' },
+            { id: 'perm_luck', name: '永続ラック強化', desc:'ダイヤ出現率永久+100%', cost: 100000000, type: 'perm', power: 2, icon:'bi-stars', rarity:'Godly' },
+            
+            { id: 'exclusive_egg', name: 'Exclusive Egg', desc:'限定ペット確定 (1e10倍)', cost: 5000, type: 'pet', power: 1e10, rarity:'Exclusive', icon:'bi-egg-fill' },
+            { id: 'secret_egg', name: 'Secret Egg', desc:'？？？ (1e15倍)', cost: 25000, type: 'pet', power: 1e15, rarity:'Secret', icon:'bi-question-circle-fill' },
+            { id: 'zenith_egg', name: 'Zenith Egg', desc:'究極ペット (1e50倍)', cost: 1000000000, type: 'pet', power: 1e50, rarity:'Zenith', icon:'bi-trophy-fill' }
         ];
+
+        /* ================= 160 UNIQUE UPGRADES (GENERATED) ================= */
+        const BUILDING_TYPES = [];
+        const UPGRADE_NAMES = [
+            ["木のカーソル", "グランマ", "農場", "宝石磨き"], // World 0
+            ["工場", "砂糖のマウス", "銀のコイン", "お菓子オーブン"], // World 1
+            ["寺院", "黒曜石マウス", "魔法使いの塔", "金の延べ棒"], // World 2
+            ["宇宙船", "スペースマウス", "錬金術ラボ", "メテオマイナー"], // World 3
+            ["ポータル", "金のタコス", "タイムマシン", "サルサカーソル"], // World 4
+            ["反物質凝縮器", "レーザーポインタ", "プリズム", "ビットコイン採掘"], // World 5
+            ["チャンセリー", "トライデント", "パールダイバー", "水素発電機"], // World 6
+            ["フラクタルエンジン", "天使の輪", "天使の羽", "雲の宮殿"], // World 7
+            ["JSコンソール", "悪魔の爪", "地獄の穴", "悪魔の契約"], // World 8
+            ["皮質ベイカー", "プラズマガン", "スターフォージ", "ブラックホール"], // World 9
+            ["ヴォイドウォーカー", "Nullポインタ", "虚無の宝箱", "リアリティエンジン"], // World 10
+            ["ネオン広告", "サイバー刀", "仮想通貨銀行", "ホロアイドル"], // World 11
+            ["蒸気機関", "真鍮のゴーグル", "クロックワーク", "スチームドリル"], // World 12
+            ["ドット絵勇者", "ピクセル剣", "グリッチ発生装置", "チートコード"], // World 13
+            ["ドラゴンの鱗", "炎の息吹", "ワイバーンの巣", "宝の守り手"], // World 14
+            ["手裏剣工場", "苦無", "影分身の術", "忍びの極意"], // World 15
+            ["巨大ツルハシ", "選鉱鍋", "造幣局", "銀行強盗"], // World 16
+            ["エクトプラズム", "ウィジャ盤", "ポルターガイスト", "呪われた人形"], // World 17
+            ["氷柱", "イグルー村", "冷凍睡眠装置", "イエティの毛皮"], // World 18
+            ["砂のシャベル", "ピラミッドパワー", "スフィンクス", "オアシス"], // World 19
+            ["マチェーテ", "ツリーハウス", "古代遺跡", "ジャングルの秘宝"], // World 20
+            ["ホバーボード", "ナノボット", "核融合炉", "空中都市"], // World 21
+            ["探偵バッジ", "タイプライター", "ジャズクラブ", "街灯"], // World 22
+            ["赤い薬", "コードの雨", "アーキテクト", "システムコア"], // World 23
+            // New Worlds
+            ["ジャンクアーム", "データ商人", "スラムの王", "違法改造"], // 24 Cyber Slum
+            ["浮遊石", "飛空艇", "風の神殿", "天空の財宝"], // 25 Sky Castle
+            ["潜水艇", "深海生物", "海底都市", "沈没船の宝"], // 26 Deep Sea
+            ["マグマドリル", "耐熱スーツ", "地熱発電所", "炎の精霊"], // 27 Magma
+            ["コロッセオ", "剣闘士", "水道橋", "皇帝の金貨"], // 28 Rome
+            ["リボルバー", "保安官", "砂金採り", "酒場"], // 29 Wild West
+            ["琥珀の杖", "恐竜の卵", "遺伝子ラボ", "T-REX"], // 30 Jurassic
+            ["チェーンソー", "ゾンビ", "廃病院", "血の契約"], // 31 Horror
+            ["月面車", "クレーター", "ヘリウム3", "エイリアンの遺跡"], // 32 Moon
+            ["テラフォーミング", "赤い砂", "バイオドーム", "火星人"], // 33 Mars
+            ["ソーラーパネル", "核融合", "プラズマ", "太陽神"], // 34 Sun
+            ["事象の地平線", "重力レンズ", "特異点", "時間停止"], // 35 Black Hole
+            ["次元跳躍", "パラレルワールド", "ドッペルゲンガー", "多元宇宙論"], // 36 Multiverse
+            ["ボクセル", "3Dプリンタ", "レンダリング", "ポリゴン"], // 37 Pixel
+            ["シュルレアリスム", "ダリの時計", "キュビズム", "色彩の暴力"], // 38 Abstract
+            ["無", "空白", "消しゴム", "再構築"], // 39 White Space
+            ["AIの反乱", "意識のアップロード", "永遠の命", "オメガポイント"] // 40 Singularity
+        ];
+
+        // Generate Upgrades
+        let upgradeIdCounter = 1;
+        WORLDS.forEach((w, idx) => {
+            if(idx < UPGRADE_NAMES.length) {
+                let names = UPGRADE_NAMES[idx];
+                let baseCost = w.cost === 0 ? 15 : w.cost * 1.5;
+                let baseProd = w.multi * 10;
+                
+                // 1. Click
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[0], type: 'click', baseP: baseProd, baseC: baseCost, icon: 'bi-cursor', desc: `クリックパワー +${formatNumber(baseProd)}`, worldReq: idx });
+                // 2. Auto
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[1], type: 'auto', baseP: baseProd * 5, baseC: baseCost * 10, icon: 'bi-gear', desc: `自動クリック +${formatNumber(baseProd*5)}`, worldReq: idx });
+                // 3. Auto Strong
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[2], type: 'auto', baseP: baseProd * 20, baseC: baseCost * 100, icon: 'bi-buildings', desc: `自動クリック +${formatNumber(baseProd*20)}`, worldReq: idx });
+                // 4. Special (Gold/Diamond)
+                let type = idx % 2 === 0 ? 'diamond' : 'gold';
+                let desc = type === 'diamond' ? 'ダイヤ獲得量UP' : 'ゴールド倍率UP';
+                let val = idx + 1;
+                BUILDING_TYPES.push({ id: `u${upgradeIdCounter++}`, name: names[3], type: type, baseP: val, baseC: baseCost * 500, icon: 'bi-stars', desc: desc, worldReq: idx });
+            }
+        });
 
         /* ================= GAME STATE & LOGIC ================= */
         let game = {
@@ -960,6 +920,7 @@
             buildings: {}, 
             inventory: [],
             buffs: {},
+            permBuffs: { click: 0, auto: 0, luck: 0 },
             startTime: Date.now()
         };
 
@@ -997,7 +958,11 @@
         }
 
         function gameLoop() {
-            if(cachedAutoCPS > 0) game.clicks += cachedAutoCPS / 10;
+            if(cachedAutoCPS > 0) {
+                let add = cachedAutoCPS / 10;
+                if (game.clicks + add < 1.7e308) game.clicks += add;
+            }
+            
             let buffChanged = false;
             for(let key in game.buffs) {
                 if(game.buffs[key] > 0) {
@@ -1036,6 +1001,14 @@
                 }
             });
             
+            // Perm Buffs
+            if(game.permBuffs) {
+                totalClick *= (1 + game.permBuffs.click);
+                totalAuto *= (1 + game.permBuffs.auto);
+                diamondChance *= (1 + game.permBuffs.luck);
+            }
+
+            // Buffs
             if(game.buffs['speed_potion']) totalClick *= 2;
             if(game.buffs['luck_potion']) diamondChance *= 2;
             if(game.buffs['crit_potion']) critChance *= 2;
@@ -1044,11 +1017,10 @@
             if(game.buffs['click_frenzy']) totalClick *= 5;
             if(game.buffs['ultra_luck']) diamondChance *= 5;
             if(game.buffs['mega_potion']) {
-                totalClick *= 3;
-                totalAuto *= 3;
-                goldMulti *= 3;
-                diamondMulti *= 3;
-                diamondChance *= 3;
+                totalClick *= 3; totalAuto *= 3; goldMulti *= 3; diamondMulti *= 3; diamondChance *= 3;
+            }
+            if(game.buffs['god_potion']) {
+                totalClick *= 10; totalAuto *= 10; goldMulti *= 10; diamondMulti *= 10; diamondChance *= 10;
             }
 
             cachedAutoCPS = totalAuto * m * goldMulti; 
@@ -1109,7 +1081,8 @@
             let power = cachedClickPower;
             let isCrit = Math.random() < cachedCritChance;
             if(isCrit) power *= 2;
-            game.clicks += power;
+            if(game.clicks + power < 1.7e308) game.clicks += power;
+            
             spawnText(e.clientX, e.clientY, `+${formatNumber(power)}`, isCrit);
             
             let dropCount = 0;
@@ -1381,7 +1354,7 @@
             const cont = document.getElementById('tab-shop'); cont.innerHTML = "";
             DIAMOND_SHOP.forEach(i => {
                 let div = document.createElement('div'); div.className = 'item-card diamond-item';
-                div.innerHTML = `<div class="item-icon" style="background:white;"><i class="bi ${i.icon}" style="color:#00d2ff;"></i></div><div><div style="font-weight:bold;">${i.name}</div><div style="font-size:0.8rem;">${i.desc}</div></div><button class="buy-btn diamond-btn" data-cost="${i.cost}" onclick="buyDiamondItem('${i.id}')"><i class="bi bi-gem-fill"></i> ${i.cost}</button>`;
+                div.innerHTML = `<div class="item-icon" style="background:white;"><i class="bi ${i.icon}" style="color:#00d2ff;"></i></div><div><div style="font-weight:bold;">${i.name}</div><div style="font-size:0.8rem;">${i.desc}</div></div><button class="buy-btn diamond-btn" data-cost="${i.cost}" onclick="buyDiamondItem('${i.id}')"><i class="bi bi-gem-fill"></i> ${formatNumber(i.cost)}</button>`;
                 cont.appendChild(div);
             });
             updateUI(cachedAutoCPS, manualClickHistory.length);
@@ -1399,6 +1372,14 @@
                     game.inventory.push({uid:Date.now(), name:item.name, rarity:item.rarity, power:item.power, equipped:false});
                     renderInventory();
                     showItemGetModal("bi-egg-fill", item.name, item.rarity, "ペット獲得！");
+                }
+                else if(item.type==='perm') {
+                    if(!game.permBuffs) game.permBuffs = { click:0, auto:0, luck:0 };
+                    if(id==='perm_click') game.permBuffs.click += 1;
+                    if(id==='perm_auto') game.permBuffs.auto += 1;
+                    if(id==='perm_luck') game.permBuffs.luck += 1;
+                    recalcStats();
+                    showNotification(`${item.name}を獲得！永続強化！`, 'success');
                 }
                 updateUI(cachedAutoCPS, manualClickHistory.length);
             }
@@ -1468,6 +1449,8 @@
                 if (p.score < myScore && p.score > myScore * 0.8) {
                      p.score += myCPS * 2; 
                 }
+                // Cap
+                if(p.score > 1.7e308) p.score = 1.7e308;
             });
 
             if(document.getElementById('leaderboard-modal').style.display === 'flex') {
@@ -1630,9 +1613,9 @@
                 showNotification("リバース成功！永続倍率獲得！", 'success');
             }
         }
-        function saveGame() { localStorage.setItem('ps99_ultimate_v2.8_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
+        function saveGame() { localStorage.setItem('ps99_ultimate_v3.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
         function loadGame() {
-            let saved = localStorage.getItem('ps99_ultimate_v2.8_save');
+            let saved = localStorage.getItem('ps99_ultimate_v3.0_save');
             if(saved) {
                 try { let parsed = JSON.parse(saved); if(parsed.version === GAME_VERSION) { game = { ...game, ...parsed }; } } catch(e) {}
             }
@@ -1644,7 +1627,7 @@
         }
         function hardReset() { 
             if(confirm("本当に全データを削除しますか？\nこの操作は取り消せません。")) { 
-                localStorage.removeItem('ps99_ultimate_v2.8_save'); 
+                localStorage.removeItem('ps99_ultimate_v3.0_save'); 
                 showNotification("データを削除しました。リロードします...", 'success');
                 setTimeout(() => location.reload(), 1500);
             } 
