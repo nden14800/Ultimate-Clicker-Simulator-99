@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Clicker Simulator 99 - v9.0 Stable Fix</title>
+    <title>Ultimate Clicker Simulator 99 - v10.0 True Endgame</title>
     
     <!-- External Library for Infinite Numbers -->
     <script src="https://cdn.jsdelivr.net/npm/break_infinity.js@2/dist/break_infinity.min.js"></script>
@@ -676,7 +676,7 @@
 
     <script>
         /* ================= CONFIGURATION & CONSTANTS ================= */
-        const GAME_VERSION = 9.0; 
+        const GAME_VERSION = 10.0; 
         const ALPHABETS = "abcdefghijklmnopqrstuvwxyz";
 
         const RARITY_COLORS = {
@@ -743,49 +743,49 @@
         }
 
         /* ================= GAME DATA DEFINITIONS ================= */
-        // COMPLETELY DEFLATED COSTS: Max Cost ~1e85 (Fits within Ocg range)
+        // TOTAL REBUILD: Max cost around 1e305 (aa range) to prevent overflow
         const WORLDS = [
             { id: 0, name: "オーバーワールド", multi: "1", cost: "0", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
-            { id: 1, name: "キャンディランド", multi: "4", cost: "1e4", bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
-            { id: 2, name: "溶岩の領域", multi: "10", cost: "5e5", bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 3, name: "宇宙空間", multi: "25", cost: "1e7", bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
-            { id: 4, name: "タコスゾーン", multi: "60", cost: "5e8", bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
-            { id: 5, name: "サイバーシティ", multi: "150", cost: "2e10", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
-            { id: 6, name: "アトランティス", multi: "400", cost: "1e12", bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
-            { id: 7, name: "天国の門", multi: "1000", cost: "5e13", bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
-            { id: 8, name: "暗黒のダンジョン", multi: "2500", cost: "1e15", bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
-            { id: 9, name: "銀河の核", multi: "6000", cost: "5e16", bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
-            { id: 10, name: "虚無の次元", multi: "1.5e4", cost: "1e18", bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
-            { id: 11, name: "ネオン東京", multi: "4e4", cost: "5e19", bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
-            { id: 12, name: "スチームパンク", multi: "1e5", cost: "1e21", bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
-            { id: 13, name: "8ビット王国", multi: "2.5e5", cost: "5e22", bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 14, name: "ドラゴンの巣", multi: "6e5", cost: "1e24", bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
-            { id: 15, name: "忍の里", multi: "1.5e6", cost: "5e25", bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
-            { id: 16, name: "ゴールドラッシュ", multi: "4e6", cost: "1e27", bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
-            { id: 17, name: "お化け屋敷", multi: "1e7", cost: "5e28", bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
-            { id: 18, name: "氷結ツンドラ", multi: "2.5e7", cost: "1e30", bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
-            { id: 19, name: "砂漠の遺跡", multi: "6e7", cost: "5e31", bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
-            { id: 20, name: "アマゾンジャングル", multi: "1.5e8", cost: "1e33", bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
-            { id: 21, name: "ユートピア3000", multi: "4e8", cost: "5e34", bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 22, name: "ノワールシティ", multi: "1e9", cost: "1e36", bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
-            { id: 23, name: "グリッチマトリックス", multi: "2.5e9", cost: "5e37", bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
-            { id: 24, name: "サイバースラム", multi: "6e9", cost: "1e39", bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
-            { id: 25, name: "天空の城ラピス", multi: "1.5e10", cost: "5e40", bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
-            { id: 26, name: "深海トレンチ", multi: "4e10", cost: "1e42", bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
-            { id: 27, name: "マグマコア", multi: "1e11", cost: "5e43", bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 28, name: "古代ローマ", multi: "2.5e11", cost: "1e45", bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
-            { id: 29, name: "ワイルドウェスト", multi: "6e11", cost: "5e46", bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
-            { id: 30, name: "ジュラシックパーク", multi: "1.5e12", cost: "1e48", bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
-            { id: 31, name: "ホラーマンション", multi: "4e12", cost: "5e49", bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
-            { id: 32, name: "月面基地", multi: "1e13", cost: "1e51", bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
-            { id: 33, name: "火星コロニー", multi: "2.5e13", cost: "5e52", bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
-            { id: 34, name: "太陽の表面", multi: "6e13", cost: "1e54", bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
-            { id: 35, name: "ブラックホール事象", multi: "1.5e14", cost: "5e55", bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
-            { id: 36, name: "マルチバース", multi: "4e14", cost: "1e57", bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 37, name: "ピクセル次元", multi: "1e15", cost: "5e58", bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 38, name: "抽象芸術の世界", multi: "2.5e15", cost: "1e60", bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
-            { id: 39, name: "ホワイトスペース", multi: "6e15", cost: "5e61", bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
-            { id: 40, name: "シンギュラリティ", multi: "1e17", cost: "1e63", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
+            { id: 1, name: "キャンディランド", multi: "4", cost: "25000", bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
+            { id: 2, name: "溶岩の領域", multi: "20", cost: "1e7", bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 3, name: "宇宙空間", multi: "100", cost: "5e9", bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
+            { id: 4, name: "タコスゾーン", multi: "500", cost: "1e13", bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
+            { id: 5, name: "サイバーシティ", multi: "2500", cost: "1e17", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
+            { id: 6, name: "アトランティス", multi: "1e4", cost: "1e22", bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
+            { id: 7, name: "天国の門", multi: "5e4", cost: "1e27", bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
+            { id: 8, name: "暗黒のダンジョン", multi: "2e5", cost: "1e33", bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
+            { id: 9, name: "銀河の核", multi: "1e6", cost: "1e40", bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
+            { id: 10, name: "虚無の次元", multi: "5e6", cost: "1e48", bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
+            { id: 11, name: "ネオン東京", multi: "2e7", cost: "1e56", bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
+            { id: 12, name: "スチームパンク", multi: "1e8", cost: "1e65", bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
+            { id: 13, name: "8ビット王国", multi: "5e8", cost: "1e74", bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 14, name: "ドラゴンの巣", multi: "2e9", cost: "1e83", bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
+            { id: 15, name: "忍の里", multi: "1e10", cost: "1e92", bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
+            { id: 16, name: "ゴールドラッシュ", multi: "5e10", cost: "1e102", bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
+            { id: 17, name: "お化け屋敷", multi: "2e11", cost: "1e112", bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
+            { id: 18, name: "氷結ツンドラ", multi: "1e12", cost: "1e122", bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
+            { id: 19, name: "砂漠の遺跡", multi: "5e12", cost: "1e133", bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
+            { id: 20, name: "アマゾンジャングル", multi: "2e13", cost: "1e144", bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
+            { id: 21, name: "ユートピア3000", multi: "1e14", cost: "1e155", bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 22, name: "ノワールシティ", multi: "5e14", cost: "1e166", bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
+            { id: 23, name: "グリッチマトリックス", multi: "2e15", cost: "1e178", bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
+            { id: 24, name: "サイバースラム", multi: "1e16", cost: "1e190", bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
+            { id: 25, name: "天空の城ラピス", multi: "5e16", cost: "1e202", bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
+            { id: 26, name: "深海トレンチ", multi: "2e17", cost: "1e215", bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
+            { id: 27, name: "マグマコア", multi: "1e18", cost: "1e228", bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 28, name: "古代ローマ", multi: "5e18", cost: "1e241", bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
+            { id: 29, name: "ワイルドウェスト", multi: "2e19", cost: "1e254", bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
+            { id: 30, name: "ジュラシックパーク", multi: "1e20", cost: "1e267", bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
+            { id: 31, name: "ホラーマンション", multi: "5e20", cost: "1e280", bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
+            { id: 32, name: "月面基地", multi: "2e21", cost: "1e293", bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
+            { id: 33, name: "火星コロニー", multi: "1e22", cost: "1e305", bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
+            { id: 34, name: "太陽の表面", multi: "5e22", cost: "1e318", bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
+            { id: 35, name: "ブラックホール事象", multi: "2e23", cost: "1e330", bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
+            { id: 36, name: "マルチバース", multi: "1e24", cost: "1e342", bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 37, name: "ピクセル次元", multi: "5e24", cost: "1e355", bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 38, name: "抽象芸術の世界", multi: "2e25", cost: "1e368", bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
+            { id: 39, name: "ホワイトスペース", multi: "1e26", cost: "1e380", bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
+            { id: 40, name: "シンギュラリティ", multi: "1e27", cost: "1e305", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
         ];
 
         // FIXED EGGS: Removed Broken High Numbers. All stats are strings for safety in Decimal.
@@ -1580,9 +1580,9 @@
                 showNotification("リバース成功！永続倍率獲得！", 'success');
             }
         }
-        function saveGame() { localStorage.setItem('ps99_infinity_v9.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
+        function saveGame() { localStorage.setItem('ps99_infinity_v10.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
         function loadGame() {
-            let saved = localStorage.getItem('ps99_infinity_v9.0_save');
+            let saved = localStorage.getItem('ps99_infinity_v10.0_save');
             if(saved) {
                 try { 
                     let parsed = JSON.parse(saved); 
@@ -1612,7 +1612,7 @@
         }
         function hardReset() { 
             if(confirm("本当に全データを削除しますか？\nこの操作は取り消せません。")) { 
-                localStorage.removeItem('ps99_infinity_v9.0_save'); 
+                localStorage.removeItem('ps99_infinity_v10.0_save'); 
                 showNotification("データを削除しました。リロードします...", 'success');
                 setTimeout(() => location.reload(), 1500);
             } 
