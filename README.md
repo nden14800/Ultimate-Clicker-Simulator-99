@@ -1,5 +1,4 @@
 # Ultimate-Clicker-Simulator-99
-# Ultimate Clicker Simulator 99
 
 ⛔ **開発終了 / Discontinued**
 
