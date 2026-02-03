@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Clicker Simulator 99 - v8.0 Balanced Fix</title>
+    <title>Ultimate Clicker Simulator 99 - v9.0 Stable Fix</title>
     
     <!-- External Library for Infinite Numbers -->
     <script src="https://cdn.jsdelivr.net/npm/break_infinity.js@2/dist/break_infinity.min.js"></script>
@@ -676,7 +676,7 @@
 
     <script>
         /* ================= CONFIGURATION & CONSTANTS ================= */
-        const GAME_VERSION = 8.0; 
+        const GAME_VERSION = 9.0; 
         const ALPHABETS = "abcdefghijklmnopqrstuvwxyz";
 
         const RARITY_COLORS = {
@@ -743,90 +743,91 @@
         }
 
         /* ================= GAME DATA DEFINITIONS ================= */
-        // BALANCED COSTS: Smoother progression, Higher End-Game
+        // COMPLETELY DEFLATED COSTS: Max Cost ~1e85 (Fits within Ocg range)
         const WORLDS = [
             { id: 0, name: "オーバーワールド", multi: "1", cost: "0", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3" },
-            { id: 1, name: "キャンディランド", multi: "2", cost: "500000", bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
-            { id: 2, name: "溶岩の領域", multi: "10", cost: "5e7", bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 3, name: "宇宙空間", multi: "50", cost: "2e10", bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
-            { id: 4, name: "タコスゾーン", multi: "200", cost: "5e13", bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
-            { id: 5, name: "サイバーシティ", multi: "1000", cost: "2e17", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
-            { id: 6, name: "アトランティス", multi: "5000", cost: "1e22", bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
-            { id: 7, name: "天国の門", multi: "2e4", cost: "5e27", bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
-            { id: 8, name: "暗黒のダンジョン", multi: "1e5", cost: "2e33", bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
-            { id: 9, name: "銀河の核", multi: "5e5", cost: "1e40", bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
-            { id: 10, name: "虚無の次元", multi: "2e6", cost: "5e47", bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
-            { id: 11, name: "ネオン東京", multi: "1e7", cost: "1e56", bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
-            { id: 12, name: "スチームパンク", multi: "5e7", cost: "5e65", bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
-            { id: 13, name: "8ビット王国", multi: "2e8", cost: "1e75", bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 14, name: "ドラゴンの巣", multi: "1e9", cost: "5e85", bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
-            { id: 15, name: "忍の里", multi: "5e9", cost: "1e96", bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
-            { id: 16, name: "ゴールドラッシュ", multi: "2e10", cost: "5e107", bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
-            { id: 17, name: "お化け屋敷", multi: "1e11", cost: "1e119", bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
-            { id: 18, name: "氷結ツンドラ", multi: "5e11", cost: "1e132", bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
-            { id: 19, name: "砂漠の遺跡", multi: "2e12", cost: "5e145", bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
-            { id: 20, name: "アマゾンジャングル", multi: "1e13", cost: "1e160", bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
-            { id: 21, name: "ユートピア3000", multi: "5e13", cost: "5e175", bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 22, name: "ノワールシティ", multi: "2e14", cost: "1e191", bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
-            { id: 23, name: "グリッチマトリックス", multi: "1e15", cost: "1e208", bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
-            { id: 24, name: "サイバースラム", multi: "5e15", cost: "5e225", bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
-            { id: 25, name: "天空の城ラピス", multi: "2e16", cost: "1e244", bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
-            { id: 26, name: "深海トレンチ", multi: "1e17", cost: "1e263", bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
-            { id: 27, name: "マグマコア", multi: "5e17", cost: "5e283", bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
-            { id: 28, name: "古代ローマ", multi: "2e18", cost: "1e305", bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
-            { id: 29, name: "ワイルドウェスト", multi: "1e19", cost: "1e328", bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
-            { id: 30, name: "ジュラシックパーク", multi: "5e19", cost: "5e351", bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
-            { id: 31, name: "ホラーマンション", multi: "2e20", cost: "1e375", bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
-            { id: 32, name: "月面基地", multi: "1e21", cost: "1e400", bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
-            { id: 33, name: "火星コロニー", multi: "5e21", cost: "5e426", bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
-            { id: 34, name: "太陽の表面", multi: "2e22", cost: "1e453", bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
-            { id: 35, name: "ブラックホール事象", multi: "1e23", cost: "1e481", bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
-            { id: 36, name: "マルチバース", multi: "5e23", cost: "5e510", bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
-            { id: 37, name: "ピクセル次元", multi: "2e24", cost: "1e540", bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
-            { id: 38, name: "抽象芸術の世界", multi: "1e25", cost: "1e571", bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
-            { id: 39, name: "ホワイトスペース", multi: "5e25", cost: "1e605", bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
-            { id: 40, name: "シンギュラリティ", multi: "1e27", cost: "1e2000", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
+            { id: 1, name: "キャンディランド", multi: "4", cost: "1e4", bg: "linear-gradient(135deg, #ff9a9e, #fecfef)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3" },
+            { id: 2, name: "溶岩の領域", multi: "10", cost: "5e5", bg: "linear-gradient(135deg, #4b130f, #e74c3c)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 3, name: "宇宙空間", multi: "25", cost: "1e7", bg: "linear-gradient(135deg, #000000, #434343)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990.mp3" },
+            { id: 4, name: "タコスゾーン", multi: "60", cost: "5e8", bg: "linear-gradient(135deg, #f1c40f, #e67e22)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chee%20Zee%20Jungle.mp3" },
+            { id: 5, name: "サイバーシティ", multi: "150", cost: "2e10", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3" },
+            { id: 6, name: "アトランティス", multi: "400", cost: "1e12", bg: "linear-gradient(135deg, #00d2ff, #3a7bd5)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3" },
+            { id: 7, name: "天国の門", multi: "1000", cost: "5e13", bg: "linear-gradient(135deg, #E0EAFC, #CFDEF3)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Wallpaper.mp3" },
+            { id: 8, name: "暗黒のダンジョン", multi: "2500", cost: "1e15", bg: "linear-gradient(135deg, #200122, #6f0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Movement%20Proposition.mp3" },
+            { id: 9, name: "銀河の核", multi: "6000", cost: "5e16", bg: "radial-gradient(circle, #ff00cc, #333399)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pixel%20Peeker%20Polka%20-%20slower.mp3" },
+            { id: 10, name: "虚無の次元", multi: "1.5e4", cost: "1e18", bg: "linear-gradient(135deg, #000, #222)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Decisions.mp3" },
+            { id: 11, name: "ネオン東京", multi: "4e4", cost: "5e19", bg: "linear-gradient(135deg, #ff00ff, #00ffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Video%20Dungeon%20Boss.mp3" },
+            { id: 12, name: "スチームパンク", multi: "1e5", cost: "1e21", bg: "linear-gradient(135deg, #b8860b, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Mechanolith.mp3" },
+            { id: 13, name: "8ビット王国", multi: "2.5e5", cost: "5e22", bg: "linear-gradient(135deg, #74b9ff, #55efc4)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 14, name: "ドラゴンの巣", multi: "6e5", cost: "1e24", bg: "linear-gradient(135deg, #c0392b, #8e44ad)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Rite%20of%20Passage.mp3" },
+            { id: 15, name: "忍の里", multi: "1.5e6", cost: "5e25", bg: "linear-gradient(135deg, #2d3436, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Eastminster.mp3" },
+            { id: 16, name: "ゴールドラッシュ", multi: "4e6", cost: "1e27", bg: "linear-gradient(135deg, #f1c40f, #f39c12)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3" },
+            { id: 17, name: "お化け屋敷", multi: "1e7", cost: "5e28", bg: "linear-gradient(135deg, #2c3e50, #4b4b4b)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Amazing%20Plan.mp3" },
+            { id: 18, name: "氷結ツンドラ", multi: "2.5e7", cost: "1e30", bg: "linear-gradient(135deg, #a29bfe, #74b9ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Winter%20Reflections.mp3" },
+            { id: 19, name: "砂漠の遺跡", multi: "6e7", cost: "5e31", bg: "linear-gradient(135deg, #e67e22, #d35400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Impact%20Prelude.mp3" },
+            { id: 20, name: "アマゾンジャングル", multi: "1.5e8", cost: "1e33", bg: "linear-gradient(135deg, #27ae60, #2ecc71)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jungle%20of%20the%20Amazon.mp3" },
+            { id: 21, name: "ユートピア3000", multi: "4e8", cost: "5e34", bg: "linear-gradient(135deg, #dfe6e9, #ffffff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 22, name: "ノワールシティ", multi: "1e9", cost: "1e36", bg: "linear-gradient(135deg, #2d3436, #636e72)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Noir.mp3" },
+            { id: 23, name: "グリッチマトリックス", multi: "2.5e9", cost: "5e37", bg: "linear-gradient(135deg, #00ff00, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" },
+            { id: 24, name: "サイバースラム", multi: "6e9", cost: "1e39", bg: "linear-gradient(135deg, #4b0082, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Killing%20Time.mp3" },
+            { id: 25, name: "天空の城ラピス", multi: "1.5e10", cost: "5e40", bg: "linear-gradient(135deg, #87ceeb, #f0f8ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/On%20the%20Ground.mp3" },
+            { id: 26, name: "深海トレンチ", multi: "4e10", cost: "1e42", bg: "linear-gradient(135deg, #00008b, #191970)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Water%20Prelude.mp3" },
+            { id: 27, name: "マグマコア", multi: "1e11", cost: "5e43", bg: "linear-gradient(135deg, #ff4500, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3" },
+            { id: 28, name: "古代ローマ", multi: "2.5e11", cost: "1e45", bg: "linear-gradient(135deg, #deb887, #f5f5dc)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Folk%20Round.mp3" },
+            { id: 29, name: "ワイルドウェスト", multi: "6e11", cost: "5e46", bg: "linear-gradient(135deg, #d2691e, #8b4513)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bama%20Country.mp3" },
+            { id: 30, name: "ジュラシックパーク", multi: "1.5e12", cost: "1e48", bg: "linear-gradient(135deg, #228b22, #006400)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/River%20Valley%20Breakdown.mp3" },
+            { id: 31, name: "ホラーマンション", multi: "4e12", cost: "5e49", bg: "linear-gradient(135deg, #2f4f4f, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Day%20of%20Chaos.mp3" },
+            { id: 32, name: "月面基地", multi: "1e13", cost: "1e51", bg: "linear-gradient(135deg, #d3d3d3, #708090)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Expeditionary.mp3" },
+            { id: 33, name: "火星コロニー", multi: "2.5e13", cost: "5e52", bg: "linear-gradient(135deg, #ff6347, #8b0000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Red%20Letter.mp3" },
+            { id: 34, name: "太陽の表面", multi: "6e13", cost: "1e54", bg: "linear-gradient(135deg, #ffd700, #ff8c00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hot%20Swing.mp3" },
+            { id: 35, name: "ブラックホール事象", multi: "1.5e14", cost: "5e55", bg: "radial-gradient(circle, #000000, #4b0082)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Black%20Vortex.mp3" },
+            { id: 36, name: "マルチバース", multi: "4e14", cost: "1e57", bg: "linear-gradient(135deg, #9400d3, #00ced1)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Ethereal.mp3" },
+            { id: 37, name: "ピクセル次元", multi: "1e15", cost: "5e58", bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
+            { id: 38, name: "抽象芸術の世界", multi: "2.5e15", cost: "1e60", bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
+            { id: 39, name: "ホワイトスペース", multi: "6e15", cost: "5e61", bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
+            { id: 40, name: "シンギュラリティ", multi: "1e17", cost: "1e63", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
         ];
 
-        // FIXED EGGS: Removed Broken "1e500000" Multipliers. Max is now around 1e500.
+        // FIXED EGGS: Removed Broken High Numbers. All stats are strings for safety in Decimal.
         const EGGS = [
             { id: 0, name: "スターター卵", cost: "250", pets: [{ name: "イヌ", rarity: "Basic", chance: 0.6, power: 1.2 }, { name: "ネコ", rarity: "Basic", chance: 0.35, power: 1.5 }, { name: "ウサギ", rarity: "Rare", chance: 0.05, power: 3 }] },
-            { id: 1, name: "森の卵", cost: "15000", pets: [{ name: "クマ", rarity: "Rare", chance: 0.7, power: 10 }, { name: "キツネ", rarity: "Epic", chance: 0.25, power: 25 }, { name: "ドラゴン", rarity: "Legendary", chance: 0.05, power: 80 }] },
-            { id: 2, name: "マグマの卵", cost: "5e6", pets: [{ name: "インプ", rarity: "Epic", chance: 0.6, power: 150 }, { name: "ゴーレム", rarity: "Mythical", chance: 0.35, power: 400 }, { name: "フェニックス", rarity: "Divine", chance: 0.05, power: 1500 }] },
-            { id: 3, name: "虚無の卵", cost: "2e9", pets: [{ name: "エイリアン", rarity: "Mythical", chance: 0.7, power: 3000 }, { name: "UFO", rarity: "Divine", chance: 0.29, power: 8000 }, { name: "ブラックホール", rarity: "Exclusive", chance: 0.01, power: 25000 }] },
-            { id: 4, name: "タコスの卵", cost: "5e13", pets: [{ name: "タコス", rarity: "Legendary", chance: 0.8, power: 5e4 }, { name: "ブリトー", rarity: "Mythical", chance: 0.19, power: 1e5 }, { name: "ゴールデンタコス", rarity: "Exclusive", chance: 0.01, power: 5e5 }] },
-            { id: 5, name: "サイバー卵", cost: "1e16", pets: [{ name: "ロボット", rarity: "Legendary", chance: 0.8, power: 2e6 }, { name: "サイボーグ", rarity: "Mythical", chance: 0.19, power: 8e6 }, { name: "AIの神", rarity: "Exclusive", chance: 0.01, power: 3e7 }] },
-            { id: 6, name: "海の卵", cost: "1e20", pets: [{ name: "サメ", rarity: "Mythical", chance: 0.8, power: 1e8 }, { name: "クラーケン", rarity: "Divine", chance: 0.19, power: 5e8 }, { name: "リヴァイアサン", rarity: "Exclusive", chance: 0.01, power: 2e9 }] },
-            { id: 7, name: "天界の卵", cost: "1e25", pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 1e11 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 5e11 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 5e12 }] },
-            { id: 8, name: "悪魔の卵", cost: "1e30", pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e14 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 5e14 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e16 }] },
-            { id: 9, name: "銀河の卵", cost: "1e38", pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 1e20 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1e22 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 1e24 }] },
-            { id: 10, name: "次元の卵", cost: "1e45", pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 1e28 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 1e30 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 1e32 }] },
-            { id: 11, name: "ネオン卵", cost: "1e52", pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e36 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 1e39 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e42 }] },
-            { id: 12, name: "歯車の卵", cost: "1e60", pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 1e46 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1e49 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 1e52 }] },
-            { id: 13, name: "ドットの卵", cost: "1e70", pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 1e56 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 1e59 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 1e62 }] },
-            { id: 14, name: "竜の卵", cost: "1e80", pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e66 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 1e70 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e75 }] },
-            { id: 15, name: "黄金の卵", cost: "1e90", pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 1e80 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1e85 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 1e90 }] },
-            { id: 16, name: "氷の卵", cost: "1e100", pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 1e95 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 1e100 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 1e105 }] },
-            { id: 17, name: "未来の卵", cost: "1e115", pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e110 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 1e115 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e120 }] },
-            { id: 18, name: "古代の卵", cost: "1e130", pets: [{ name: "化石", rarity: "Divine", chance: 0.8, power: 1e125 }, { name: "アンモナイト", rarity: "Exclusive", chance: 0.19, power: 1e130 }, { name: "シーラカンス", rarity: "Secret", chance: 0.01, power: 1e135 }] },
-            { id: 19, name: "密林の卵", cost: "1e150", pets: [{ name: "ジャガー", rarity: "Exclusive", chance: 0.8, power: 1e145 }, { name: "大蛇", rarity: "Secret", chance: 0.19, power: 1e150 }, { name: "森の精霊", rarity: "Godly", chance: 0.01, power: 1e155 }] },
-            { id: 20, name: "スラムの卵", cost: "1e170", pets: [{ name: "ラット", rarity: "Exclusive", chance: 0.8, power: 1e165 }, { name: "ハッカー", rarity: "Secret", chance: 0.19, power: 1e170 }, { name: "ジャンク神", rarity: "Zenith", chance: 0.01, power: 1e175 }] },
-            { id: 21, name: "天空の卵", cost: "1e190", pets: [{ name: "ハーピー", rarity: "Secret", chance: 0.8, power: 1e185 }, { name: "グリフォン", rarity: "Godly", chance: 0.19, power: 1e190 }, { name: "天空竜", rarity: "Zenith", chance: 0.01, power: 1e195 }] },
-            { id: 22, name: "深海の卵", cost: "1e210", pets: [{ name: "アンコウ", rarity: "Secret", chance: 0.8, power: 1e205 }, { name: "海獣", rarity: "Godly", chance: 0.19, power: 1e210 }, { name: "ポセイドン", rarity: "Zenith", chance: 0.01, power: 1e215 }] },
-            { id: 23, name: "溶岩核の卵", cost: "1e230", pets: [{ name: "溶岩スライム", rarity: "Godly", chance: 0.8, power: 1e225 }, { name: "イフリート", rarity: "Zenith", chance: 0.19, power: 1e230 }, { name: "スルト", rarity: "Void", chance: 0.01, power: 1e235 }] },
-            { id: 24, name: "ローマの卵", cost: "1e250", pets: [{ name: "戦士", rarity: "Godly", chance: 0.8, power: 1e245 }, { name: "将軍", rarity: "Zenith", chance: 0.19, power: 1e250 }, { name: "カエサル", rarity: "Void", chance: 0.01, power: 1e255 }] },
-            { id: 25, name: "西部の卵", cost: "1e270", pets: [{ name: "保安官", rarity: "Zenith", chance: 0.8, power: 1e265 }, { name: "無法者", rarity: "Void", chance: 0.19, power: 1e270 }, { name: "早撃ち", rarity: "Omega", chance: 0.01, power: 1e275 }] },
-            { id: 26, name: "恐竜の卵", cost: "1e300", pets: [{ name: "トリケラ", rarity: "Zenith", chance: 0.8, power: 1e290 }, { name: "T-Rex", rarity: "Void", chance: 0.19, power: 1e300 }, { name: "メテオ", rarity: "Omega", chance: 0.01, power: 1e310 }] },
-            { id: 27, name: "恐怖の卵", cost: "1e330", pets: [{ name: "ゴースト", rarity: "Void", chance: 0.8, power: 1e320 }, { name: "死神", rarity: "Omega", chance: 0.19, power: 1e330 }, { name: "クトゥルフ", rarity: "Omega", chance: 0.01, power: 1e340 }] },
-            { id: 28, name: "月の卵", cost: "1e360", pets: [{ name: "ムーンラビット", rarity: "Void", chance: 0.8, power: 1e350 }, { name: "かぐや", rarity: "Omega", chance: 0.19, power: 1e360 }, { name: "月読命", rarity: "Omega", chance: 0.01, power: 1e370 }] },
-            { id: 29, name: "火星の卵", cost: "1e400", pets: [{ name: "マーズ", rarity: "Void", chance: 0.8, power: 1e390 }, { name: "火星人", rarity: "Omega", chance: 0.19, power: 1e400 }, { name: "オリンポス", rarity: "Omega", chance: 0.01, power: 1e410 }] },
-            { id: 30, name: "太陽の卵", cost: "1e450", pets: [{ name: "フレア", rarity: "Omega", chance: 0.8, power: 1e440 }, { name: "ヘリオス", rarity: "Omega", chance: 0.19, power: 1e450 }, { name: "アマテラス", rarity: "Omega", chance: 0.01, power: 1e460 }] },
-            { id: 31, name: "ブラックホール卵", cost: "1e500", pets: [{ name: "重力子", rarity: "Omega", chance: 0.8, power: 1e490 }, { name: "事象の地平線", rarity: "Omega", chance: 0.19, power: 1e500 }, { name: "特異点", rarity: "Omega", chance: 0.01, power: 1e510 }] },
-            { id: 32, name: "マルチバース卵", cost: "1e550", pets: [{ name: "別次元の君", rarity: "Omega", chance: 0.8, power: 1e540 }, { name: "タイムパトロール", rarity: "Omega", chance: 0.19, power: 1e550 }, { name: "全知全能", rarity: "Omega", chance: 0.01, power: 1e560 }] },
-            { id: 33, name: "ピクセル卵", cost: "1e600", pets: [{ name: "バグ", rarity: "Omega", chance: 0.8, power: 1e590 }, { name: "グリッチ", rarity: "Omega", chance: 0.19, power: 1e600 }, { name: "開発者", rarity: "Omega", chance: 0.01, power: 1e610 }] },
-            { id: 34, name: "抽象の卵", cost: "1e700", pets: [{ name: "形", rarity: "Omega", chance: 0.8, power: 1e690 }, { name: "色", rarity: "Omega", chance: 0.19, power: 1e700 }, { name: "概念", rarity: "Omega", chance: 0.01, power: 1e720 }] },
-            { id: 35, name: "無の卵", cost: "1e850", pets: [{ name: "空白", rarity: "Omega", chance: 0.8, power: 1e840 }, { name: "虚構", rarity: "Omega", chance: 0.19, power: 1e860 }, { name: "存在しないもの", rarity: "Omega", chance: 0.01, power: 1e900 }] },
-            { id: 36, name: "シンギュラリティ卵", cost: "1e1000", pets: [{ name: "AI", rarity: "Omega", chance: 0.8, power: 1e950 }, { name: "超知能", rarity: "Omega", chance: 0.19, power: 1e980 }, { name: "THE END", rarity: "Zenith", chance: 0.01, power: 1e1000 }] }
+            { id: 1, name: "森の卵", cost: "5000", pets: [{ name: "クマ", rarity: "Rare", chance: 0.7, power: 5 }, { name: "キツネ", rarity: "Epic", chance: 0.25, power: 10 }, { name: "ドラゴン", rarity: "Legendary", chance: 0.05, power: 30 }] },
+            { id: 2, name: "マグマの卵", cost: "2e5", pets: [{ name: "インプ", rarity: "Epic", chance: 0.6, power: 25 }, { name: "ゴーレム", rarity: "Mythical", chance: 0.35, power: 60 }, { name: "フェニックス", rarity: "Divine", chance: 0.05, power: 150 }] },
+            { id: 3, name: "虚無の卵", cost: "1e7", pets: [{ name: "エイリアン", rarity: "Mythical", chance: 0.7, power: 100 }, { name: "UFO", rarity: "Divine", chance: 0.29, power: 250 }, { name: "ブラックホール", rarity: "Exclusive", chance: 0.01, power: 800 }] },
+            { id: 4, name: "タコスの卵", cost: "5e8", pets: [{ name: "タコス", rarity: "Legendary", chance: 0.8, power: 500 }, { name: "ブリトー", rarity: "Mythical", chance: 0.19, power: 1200 }, { name: "ゴールデンタコス", rarity: "Exclusive", chance: 0.01, power: 4000 }] },
+            { id: 5, name: "サイバー卵", cost: "2e10", pets: [{ name: "ロボット", rarity: "Legendary", chance: 0.8, power: 2000 }, { name: "サイボーグ", rarity: "Mythical", chance: 0.19, power: 5000 }, { name: "AIの神", rarity: "Exclusive", chance: 0.01, power: 15000 }] },
+            { id: 6, name: "海の卵", cost: "1e12", pets: [{ name: "サメ", rarity: "Mythical", chance: 0.8, power: 8000 }, { name: "クラーケン", rarity: "Divine", chance: 0.19, power: 20000 }, { name: "リヴァイアサン", rarity: "Exclusive", chance: 0.01, power: 60000 }] },
+            { id: 7, name: "天界の卵", cost: "5e13", pets: [{ name: "エンジェル", rarity: "Divine", chance: 0.8, power: 3e4 }, { name: "アークエンジェル", rarity: "Exclusive", chance: 0.19, power: 8e4 }, { name: "創造主", rarity: "Secret", chance: 0.01, power: 3e5 }] },
+            { id: 8, name: "悪魔の卵", cost: "2e15", pets: [{ name: "小悪魔", rarity: "Divine", chance: 0.8, power: 1e5 }, { name: "デーモンロード", rarity: "Exclusive", chance: 0.19, power: 3e5 }, { name: "サタン", rarity: "Secret", chance: 0.01, power: 1e6 }] },
+            { id: 9, name: "銀河の卵", cost: "1e17", pets: [{ name: "スター", rarity: "Divine", chance: 0.8, power: 5e5 }, { name: "パルサー", rarity: "Exclusive", chance: 0.19, power: 1.5e6 }, { name: "クエーサー", rarity: "Secret", chance: 0.01, power: 5e6 }] },
+            { id: 10, name: "次元の卵", cost: "5e18", pets: [{ name: "次元の裂け目", rarity: "Exclusive", chance: 0.8, power: 2e6 }, { name: "時空の支配者", rarity: "Secret", chance: 0.19, power: 6e6 }, { name: "THE END", rarity: "Taco", chance: 0.01, power: 2e7 }] },
+            { id: 11, name: "ネオン卵", cost: "2e20", pets: [{ name: "ネオンキャット", rarity: "Exclusive", chance: 0.8, power: 1e7 }, { name: "サイバーパンク", rarity: "Secret", chance: 0.19, power: 3e7 }, { name: "AKIRA", rarity: "Taco", chance: 0.01, power: 1e8 }] },
+            { id: 12, name: "歯車の卵", cost: "1e22", pets: [{ name: "歯車", rarity: "Rare", chance: 0.8, power: 5e7 }, { name: "蒸気機関", rarity: "Legendary", chance: 0.19, power: 1.5e8 }, { name: "タイムギア", rarity: "Secret", chance: 0.01, power: 5e8 }] },
+            { id: 13, name: "ドットの卵", cost: "5e23", pets: [{ name: "スライム", rarity: "Rare", chance: 0.8, power: 2e8 }, { name: "勇者", rarity: "Mythical", chance: 0.19, power: 6e8 }, { name: "魔王", rarity: "Secret", chance: 0.01, power: 2e9 }] },
+            { id: 14, name: "竜の卵", cost: "2e25", pets: [{ name: "ワイバーン", rarity: "Epic", chance: 0.8, power: 1e9 }, { name: "古龍", rarity: "Divine", chance: 0.19, power: 3e9 }, { name: "バハムート", rarity: "Taco", chance: 0.01, power: 1e10 }] },
+            { id: 15, name: "黄金の卵", cost: "1e27", pets: [{ name: "金塊", rarity: "Legendary", chance: 0.8, power: 5e9 }, { name: "トレジャー", rarity: "Exclusive", chance: 0.19, power: 1.5e10 }, { name: "ミダス", rarity: "Secret", chance: 0.01, power: 5e10 }] },
+            { id: 16, name: "氷の卵", cost: "5e28", pets: [{ name: "雪だるま", rarity: "Mythical", chance: 0.8, power: 2e10 }, { name: "イエティ", rarity: "Divine", chance: 0.19, power: 6e10 }, { name: "氷の女王", rarity: "Taco", chance: 0.01, power: 2e11 }] },
+            { id: 17, name: "未来の卵", cost: "2e30", pets: [{ name: "ドローン", rarity: "Divine", chance: 0.8, power: 1e11 }, { name: "アンドロイド", rarity: "Exclusive", chance: 0.19, power: 3e11 }, { name: "ニューラルAI", rarity: "Secret", chance: 0.01, power: 1e12 }] },
+            { id: 18, name: "古代の卵", cost: "1e32", pets: [{ name: "化石", rarity: "Divine", chance: 0.8, power: 5e11 }, { name: "アンモナイト", rarity: "Exclusive", chance: 0.19, power: 1.5e12 }, { name: "シーラカンス", rarity: "Secret", chance: 0.01, power: 5e12 }] },
+            { id: 19, name: "密林の卵", cost: "5e33", pets: [{ name: "ジャガー", rarity: "Exclusive", chance: 0.8, power: 2e12 }, { name: "大蛇", rarity: "Secret", chance: 0.19, power: 6e12 }, { name: "森の精霊", rarity: "Godly", chance: 0.01, power: 2e13 }] },
+            { id: 20, name: "スラムの卵", cost: "2e35", pets: [{ name: "ラット", rarity: "Exclusive", chance: 0.8, power: 1e13 }, { name: "ハッカー", rarity: "Secret", chance: 0.19, power: 3e13 }, { name: "ジャンク神", rarity: "Zenith", chance: 0.01, power: 1e14 }] },
+            { id: 21, name: "天空の卵", cost: "1e37", pets: [{ name: "ハーピー", rarity: "Secret", chance: 0.8, power: 5e13 }, { name: "グリフォン", rarity: "Godly", chance: 0.19, power: 1.5e14 }, { name: "天空竜", rarity: "Zenith", chance: 0.01, power: 5e14 }] },
+            { id: 22, name: "深海の卵", cost: "5e38", pets: [{ name: "アンコウ", rarity: "Secret", chance: 0.8, power: 2e14 }, { name: "海獣", rarity: "Godly", chance: 0.19, power: 6e14 }, { name: "ポセイドン", rarity: "Zenith", chance: 0.01, power: 2e15 }] },
+            { id: 23, name: "溶岩核の卵", cost: "2e40", pets: [{ name: "溶岩スライム", rarity: "Godly", chance: 0.8, power: 1e15 }, { name: "イフリート", rarity: "Zenith", chance: 0.19, power: 3e15 }, { name: "スルト", rarity: "Void", chance: 0.01, power: 1e16 }] },
+            { id: 24, name: "ローマの卵", cost: "1e42", pets: [{ name: "戦士", rarity: "Godly", chance: 0.8, power: 5e15 }, { name: "将軍", rarity: "Zenith", chance: 0.19, power: 1.5e16 }, { name: "カエサル", rarity: "Void", chance: 0.01, power: 5e16 }] },
+            { id: 25, name: "西部の卵", cost: "5e43", pets: [{ name: "保安官", rarity: "Zenith", chance: 0.8, power: 2e16 }, { name: "無法者", rarity: "Void", chance: 0.19, power: 6e16 }, { name: "早撃ち", rarity: "Omega", chance: 0.01, power: 2e17 }] },
+            // RE-BALANCED DINOSAUR EGG AND LATER (Reasonable numbers, strings)
+            { id: 26, name: "恐竜の卵", cost: "2e45", pets: [{ name: "トリケラ", rarity: "Zenith", chance: 0.8, power: "1e17" }, { name: "T-Rex", rarity: "Void", chance: 0.19, power: "3e17" }, { name: "メテオ", rarity: "Omega", chance: 0.01, power: "1e18" }] },
+            { id: 27, name: "恐怖の卵", cost: "1e47", pets: [{ name: "ゴースト", rarity: "Void", chance: 0.8, power: "5e17" }, { name: "死神", rarity: "Omega", chance: 0.19, power: "1.5e18" }, { name: "クトゥルフ", rarity: "Omega", chance: 0.01, power: "5e18" }] },
+            { id: 28, name: "月の卵", cost: "5e48", pets: [{ name: "ムーンラビット", rarity: "Void", chance: 0.8, power: "2e18" }, { name: "かぐや", rarity: "Omega", chance: 0.19, power: "6e18" }, { name: "月読命", rarity: "Omega", chance: 0.01, power: "2e19" }] },
+            { id: 29, name: "火星の卵", cost: "2e50", pets: [{ name: "マーズ", rarity: "Void", chance: 0.8, power: "1e19" }, { name: "火星人", rarity: "Omega", chance: 0.19, power: "3e19" }, { name: "オリンポス", rarity: "Omega", chance: 0.01, power: "1e20" }] },
+            { id: 30, name: "太陽の卵", cost: "1e52", pets: [{ name: "フレア", rarity: "Omega", chance: 0.8, power: "5e19" }, { name: "ヘリオス", rarity: "Omega", chance: 0.19, power: "1.5e20" }, { name: "アマテラス", rarity: "Omega", chance: 0.01, power: "5e20" }] },
+            { id: 31, name: "ブラックホール卵", cost: "5e53", pets: [{ name: "重力子", rarity: "Omega", chance: 0.8, power: "2e20" }, { name: "事象の地平線", rarity: "Omega", chance: 0.19, power: "6e20" }, { name: "特異点", rarity: "Omega", chance: 0.01, power: "2e21" }] },
+            { id: 32, name: "マルチバース卵", cost: "2e55", pets: [{ name: "別次元の君", rarity: "Omega", chance: 0.8, power: "1e21" }, { name: "タイムパトロール", rarity: "Omega", chance: 0.19, power: "3e21" }, { name: "全知全能", rarity: "Omega", chance: 0.01, power: "1e22" }] },
+            { id: 33, name: "ピクセル卵", cost: "1e57", pets: [{ name: "バグ", rarity: "Omega", chance: 0.8, power: "5e21" }, { name: "グリッチ", rarity: "Omega", chance: 0.19, power: "1.5e22" }, { name: "開発者", rarity: "Omega", chance: 0.01, power: "5e22" }] },
+            { id: 34, name: "抽象の卵", cost: "5e58", pets: [{ name: "形", rarity: "Omega", chance: 0.8, power: "2e22" }, { name: "色", rarity: "Omega", chance: 0.19, power: "6e22" }, { name: "概念", rarity: "Omega", chance: 0.01, power: "2e23" }] },
+            { id: 35, name: "無の卵", cost: "2e60", pets: [{ name: "空白", rarity: "Omega", chance: 0.8, power: "1e23" }, { name: "虚構", rarity: "Omega", chance: 0.19, power: "3e23" }, { name: "存在しないもの", rarity: "Omega", chance: 0.01, power: "1e24" }] },
+            { id: 36, name: "シンギュラリティ卵", cost: "1e62", pets: [{ name: "AI", rarity: "Omega", chance: 0.8, power: "5e23" }, { name: "超知能", rarity: "Omega", chance: 0.19, power: "1.5e24" }, { name: "THE END", rarity: "Zenith", chance: 0.01, power: "5e24" }] }
         ];
 
         const DIAMOND_SHOP = [
@@ -850,9 +851,9 @@
             
             { id: 'exclusive_egg', name: 'Exclusive Egg', desc:'限定ペット確定 (1e10倍)', cost: 5000, type: 'pet', power: 1e10, rarity:'Exclusive', icon:'bi-egg-fill' },
             { id: 'secret_egg', name: 'Secret Egg', desc:'？？？ (1e15倍)', cost: 25000, type: 'pet', power: 1e15, rarity:'Secret', icon:'bi-question-circle-fill' },
-            { id: 'zenith_egg', name: 'Zenith Egg', desc:'究極ペット (1e50倍)', cost: 1000000000, type: 'pet', power: 1e50, rarity:'Zenith', icon:'bi-trophy-fill' },
+            { id: 'zenith_egg', name: 'Zenith Egg', desc:'究極ペット (1e20倍)', cost: 1000000000, type: 'pet', power: 1e20, rarity:'Zenith', icon:'bi-trophy-fill' },
             // NEW PET ITEM
-            { id: 'dev_egg', name: '開発者エッグ', desc:'チート級ペット (1e100倍)', cost: 1e15, type: 'pet', power: 1e100, rarity:'Infinity', icon:'bi-code-square' }
+            { id: 'dev_egg', name: '開発者エッグ', desc:'チート級ペット (1e25倍)', cost: 1e15, type: 'pet', power: 1e25, rarity:'Infinity', icon:'bi-code-square' }
         ];
 
         const UPGRADE_NAMES = [
@@ -1099,7 +1100,8 @@
             let m = new Decimal(WORLDS[game.world].multi);
             let pMulti = new Decimal(1);
             let equipped = game.inventory.filter(p => p.equipped).sort((a,b)=>b.power-a.power).slice(0,5);
-            equipped.forEach(p => pMulti = pMulti.add(p.power));
+            // FIXED: Ensure power is treated as Decimal
+            equipped.forEach(p => pMulti = pMulti.add(new Decimal(p.power)));
             let rMulti = new Decimal(1 + game.rebirths); 
             return m.times(pMulti).times(rMulti);
         }
@@ -1578,9 +1580,9 @@
                 showNotification("リバース成功！永続倍率獲得！", 'success');
             }
         }
-        function saveGame() { localStorage.setItem('ps99_infinity_v8.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
+        function saveGame() { localStorage.setItem('ps99_infinity_v9.0_save', JSON.stringify(game)); showNotification("データ保存完了", 'save'); }
         function loadGame() {
-            let saved = localStorage.getItem('ps99_infinity_v8.0_save');
+            let saved = localStorage.getItem('ps99_infinity_v9.0_save');
             if(saved) {
                 try { 
                     let parsed = JSON.parse(saved); 
@@ -1610,7 +1612,7 @@
         }
         function hardReset() { 
             if(confirm("本当に全データを削除しますか？\nこの操作は取り消せません。")) { 
-                localStorage.removeItem('ps99_infinity_v8.0_save'); 
+                localStorage.removeItem('ps99_infinity_v9.0_save'); 
                 showNotification("データを削除しました。リロードします...", 'success');
                 setTimeout(() => location.reload(), 1500);
             } 
