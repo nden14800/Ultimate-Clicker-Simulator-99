@@ -785,7 +785,7 @@
             { id: 37, name: "ピクセル次元", multi: "5e24", cost: "1e355", bg: "linear-gradient(135deg, #00ff00, #ff00ff)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/8bit%20Dungeon%20Level.mp3" },
             { id: 38, name: "抽象芸術の世界", multi: "2e25", cost: "1e368", bg: "linear-gradient(135deg, #ff69b4, #ffff00)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Abstract%20Anxiety.mp3" },
             { id: 39, name: "ホワイトスペース", multi: "1e26", cost: "1e380", bg: "linear-gradient(135deg, #ffffff, #f0f0f0)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Clean%20Soul.mp3" },
-            { id: 40, name: "シンギュラリティ", multi: "1e27", cost: "1e305", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
+            { id: 40, name: "シンギュラリティ", multi: "1e27", cost: "1e393", bg: "radial-gradient(circle, #ffffff, #000000)", music: "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Universal.mp3" }
         ];
 
         const EGGS = [
@@ -1132,7 +1132,7 @@
             if(val===1) document.querySelectorAll('.bulk-btn')[0].classList.add('active');
             else if(val===10) document.querySelectorAll('.bulk-btn')[1].classList.add('active');
             else if(val===100) document.querySelectorAll('.bulk-btn')[2].classList.add('active');
-            else document.querySelectorAll('.bulk-btn')[3].classList.add('active');
+            else if(val==='max') document.querySelectorAll('.bulk-btn')[3].classList.add('active');
             document.getElementById('buy-amount-display').innerText = val === 'max' ? "MAX" : val;
             if(val !== 'max') {
                 document.querySelector('.bulk-slider').value = val;
@@ -1504,7 +1504,11 @@
         function renderInventory() {
             const cont = document.getElementById('inventory-container'); cont.innerHTML = "";
             let equipped = 0;
-            game.inventory.sort((a,b) => (a.equipped===b.equipped)?(b.power-a.power):(a.equipped?-1:1));
+            game.inventory.sort((a,b) => {
+                if(a.equipped !== b.equipped) return a.equipped ? -1 : 1;
+                let pa = new Decimal(a.power), pb = new Decimal(b.power);
+                return pb.gt(pa) ? 1 : pb.lt(pa) ? -1 : 0;
+            });
             game.inventory.forEach(p => {
                 if(p.equipped) equipped++;
                 let div = document.createElement('div'); div.className = 'pet-slot'; div.style.borderColor = RARITY_COLORS[p.rarity];
@@ -1519,7 +1523,10 @@
         }
         function equipBest() {
             game.inventory.forEach(p=>p.equipped=false);
-            game.inventory.sort((a,b)=>b.power-a.power);
+            game.inventory.sort((a,b) => {
+                let pa = new Decimal(a.power), pb = new Decimal(b.power);
+                return pb.gt(pa) ? 1 : pb.lt(pa) ? -1 : 0;
+            });
             for(let i=0; i<Math.min(5, game.inventory.length); i++) game.inventory[i].equipped=true;
             renderInventory(); recalcStats();
         }
